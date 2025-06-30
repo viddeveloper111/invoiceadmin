@@ -5,25 +5,61 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, User, Building2 } from "lucide-react";
+import axios from 'axios'
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 export const Login = ({ onLogin }: LoginProps) => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate login delay
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin();
-    }, 1000);
+  const handleSubmit = async (e: React.FormEvent) => {
+    // e.preventDefault();
+    // setIsLoading(true);
+    // // Simulate login delay
+    // setTimeout(() => {
+    //   setIsLoading(false);
+    //   console.log('This is handle submit with data ',email,password)
+    //   onLogin();
+    // }, 1000);
+      e.preventDefault();
+        setIsLoading(true);
+    try {
+       const loginData={
+        username:username.trim(),
+        password:password.trim()
+       }
+       if (!loginData.username || !loginData.password) {
+      alert("Please enter both email and password");
+       setIsLoading(false);
+       return;
+     }
+
+        // Now putting the axios request
+        const result=await axios.post('https://api.vidhema.com/users/login',loginData,
+         { headers: { 'Content-Type': 'application/json' }} 
+        )
+        console.log('This is posted data of signin',result.data)
+        console.log(result.data.user)
+        const {user,token}=result.data
+        console.log('This is the data of the login user sending to the localstorage',user,token)
+
+        // Local Storage data sending
+        localStorage.setItem('User',JSON.stringify(user))
+        localStorage.setItem('Token',JSON.stringify(token))
+
+        setIsLoading(false)
+        alert('Login Successfull')
+        onLogin()
+
+    } catch (error) {
+      console.log('This error in login',error)
+      alert('Not able to signin ')
+    }
   };
 
   return (
@@ -55,8 +91,8 @@ export const Login = ({ onLogin }: LoginProps) => {
                   id="email"
                   type="email"
                   placeholder="admin@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
