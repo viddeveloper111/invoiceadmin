@@ -3,20 +3,25 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Calendar, DollarSign, MessageCircle, CreditCard } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger ,DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import axios from 'axios'
 
 interface Client {
-  id: number;
+  mobileNo: string;
+  countryCode: string;
+  projectManager: string | null;
+  serialNo: string;
+  id: string;
   name: string;
   contactPerson: string;
   email: string;
   phone: string;
   company: string;
-  status: string;
+  status: boolean |string;
   lastFollowup: string;
   nextFollowup: string;
   paymentStatus: string;
@@ -25,6 +30,13 @@ interface Client {
   conversations: number;
   chatMessages: { id: number; message: string; timestamp: string }[];
   followups: { id: number; description: string; datetime: string; completed: boolean }[];
+  country	: string;
+  createdAt:	 string;
+  updatedAt	: string;
+  otherDetails:any[];
+  source :	 string;
+  username :string;
+  profileImage: string | null;
 }
 
 interface ClientListProps {
@@ -33,13 +45,14 @@ interface ClientListProps {
 }
 
 export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
-  const [editingClient, setEditingClient] = useState<number | null>(null);
+  // const [editingClient, setEditingClient] = useState<number | null>(null);
+  const [editingClient, setEditingClient] =useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<Client>>({});
   const [followupData, setFollowupData] = useState({ description: "", datetime: "" });
   const [newMessage, setNewMessage] = useState("");
-  const [paymentDialog, setPaymentDialog] = useState<number | null>(null);
+  const [paymentDialog, setPaymentDialog] = useState<string | null>(null);
   const [paymentData, setPaymentData] = useState({ status: "", totalAmount: 0, paidAmount: 0 });
-
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active": return "bg-green-100 text-green-800 border-green-200";
@@ -52,18 +65,37 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
   const getPaymentColor = (status: string) => {
     switch (status) {
       case "Paid": return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "Pending": return "bg-red-100 text-red-800 border-red-200";
+      // case "Pending": return "bg-red-100 text-red-800 border-red-200";
+      case "Due": return "bg-red-100 text-red-800 border-red-200";
       case "Partial": return "bg-blue-100 text-blue-800 border-blue-200";
       case "Overdue": return "bg-red-100 text-red-800 border-red-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const updateClient = (id: number, updates: Partial<Client>) => {
-    const updatedClients = clients.map(client =>
+  const updateClient = async(id: string, updates: Partial<Client>) => {
+    
+    try {
+      const updatePayload={
+        ...updates,
+
+      }
+      console.log("Updating client with ID:", id);
+      console.log('this is the updateclient data',updatePayload)
+      const result=await axios.patch(`http://localhost:3006/clients/${id}`,updatePayload,
+        { headers: { 'Content-Type': 'application/json' }}
+      )
+     
+       
+    console.log('This is the updating data sending to database',result.data)
+      const updatedClients = clients.map(client =>
       client.id === id ? { ...client, ...updates } : client
     );
-    onUpdate(updatedClients);
+      onUpdate(updatedClients);
+    } catch (error) {
+       console.log('thiere is error in updating',error)
+    }
+    
   };
 
   const saveEdit = () => {
@@ -74,7 +106,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
     }
   };
 
-  const addFollowup = (clientId: number) => {
+  const addFollowup = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     if (client && followupData.description && followupData.datetime) {
       const newFollowup = {
@@ -92,7 +124,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
     }
   };
 
-  const addChatMessage = (clientId: number) => {
+  const addChatMessage = (clientId: string) => {
     if (!newMessage.trim()) return;
     const client = clients.find(c => c.id === clientId);
     if (client) {
@@ -110,7 +142,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
     }
   };
 
-  const updatePaymentStatus = (clientId: number) => {
+  const updatePaymentStatus = (clientId: string) => {
     updateClient(clientId, {
       paymentStatus: paymentData.status,
       totalAmount: paymentData.totalAmount,
@@ -138,6 +170,8 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
     <div className="space-y-6">
       {clients.map((client) => {
         const groupedMessages = groupMessagesByDate(client.chatMessages || []);
+        const statusStr = typeof client.status === "boolean" ? (client.status ? "Active" : "Pending") : client.status;
+       
         
         return (
           <div key={client.id} className="border-0 rounded-xl p-6 bg-white shadow-lg hover:shadow-xl transition-all duration-200 border-l-4 border-l-blue-500">
@@ -145,8 +179,10 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-4">
                   <h3 className="text-xl font-bold text-gray-900">{client.name}</h3>
+                   <h3 className="text-xl font-bold text-gray-900">{client.id}</h3>
+                  
                   <div className="flex gap-2">
-                    <Badge className={`${getStatusColor(client.status)} px-3 py-1 font-medium border`}>
+                    <Badge className={`${getStatusColor(statusStr)} px-3 py-1 font-medium border`}>
                       Client: {client.status}
                     </Badge>
                     <Badge className={`${getPaymentColor(client.paymentStatus)} px-3 py-1 font-medium border`}>
@@ -158,7 +194,9 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Contact Person</p>
-                    <p>{client.contactPerson}</p>
+                    {/* <p>{client.contactPerson}</p> */}
+                    <p>{client.contactPerson || client.projectManager || "N/A"}</p>
+                    
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Email</p>
@@ -166,7 +204,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Phone</p>
-                    <p>{client.phone}</p>
+                    <p> {client.countryCode} {client.mobileNo}</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Next Follow-up</p>
@@ -212,6 +250,9 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">Edit Client Details</DialogTitle>
+                           <DialogDescription>
+                           Make changes to the clients information below.
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
@@ -263,6 +304,9 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">Schedule Follow-up</DialogTitle>
+                        <DialogDescription>
+                        Set a reminder and message for your next client interaction.
+                    </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
@@ -365,6 +409,9 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">Update Payment Status</DialogTitle>
+                     <DialogDescription>
+                     Modify the payment status and financial details for this client.
+                  </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>

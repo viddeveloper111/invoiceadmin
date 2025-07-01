@@ -1,20 +1,32 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Users, TrendingUp } from "lucide-react";
 import { ClientForm } from "./ClientForm";
 import { ClientList } from "./ClientList";
+import axios from 'axios'
 
 interface Client {
-  id: number;
+  id: string;
   name: string;
   contactPerson: string;
   email: string;
   phone: string;
+  mobileNo: string;
   company: string;
-  status: string;
+  projectManager: string|null;
+  profileImage: string | null;
+  serialNo: string;
+  status: boolean | string;
+  country: string;
+  countryCode: string;
+  createdAt: string;
+  updatedAt: string;
+  otherDetails: any[];
+  source: string;
+  username: string;
   lastFollowup: string;
   nextFollowup: string;
   paymentStatus: string;
@@ -25,74 +37,125 @@ interface Client {
   followups: { id: number; description: string; datetime: string; completed: boolean }[];
 }
 
-export const ClientManagement = () => {
+export const ClientManagement =  () => {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: 1,
-      name: "TechCorp Solutions",
-      contactPerson: "John Smith",
-      email: "john@techcorp.com",
-      phone: "+1-234-567-8900",
-      company: "TechCorp Solutions",
-      status: "Active",
-      lastFollowup: "2024-12-26",
-      nextFollowup: "2024-12-30",
-      paymentStatus: "Paid",
-      totalAmount: 50000,
-      paidAmount: 50000,
-      conversations: 5,
-      chatMessages: [],
-      followups: []
-    },
-    {
-      id: 2,
-      name: "ABC Technologies", 
-      contactPerson: "Sarah Johnson",
-      email: "sarah@abctech.com",
-      phone: "+1-234-567-8901",
-      company: "ABC Technologies",
-      status: "Pending",
-      lastFollowup: "2024-12-25",
-      nextFollowup: "2024-12-28",
-      paymentStatus: "Partial",
-      totalAmount: 75000,
-      paidAmount: 25000,
-      conversations: 3,
-      chatMessages: [],
-      followups: []
-    }
-  ]);
+  // const [clients, setClients] = useState<Client[]>([
+  //   {
+  //     id: 1,
+  //     name: "TechCorp Solutions",
+  //     contactPerson: "John Smith",
+  //     email: "john@techcorp.com",
+  //     phone: "+1-234-567-8900",
+  //     company: "TechCorp Solutions",
+  //     status: "Active",
+  //     lastFollowup: "2024-12-26",
+  //     nextFollowup: "2024-12-30",
+  //     paymentStatus: "Paid",
+  //     totalAmount: 50000,
+  //     paidAmount: 50000,
+  //     conversations: 5,
+  //     chatMessages: [],
+  //     followups: []
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "ABC Technologies", 
+  //     contactPerson: "Sarah Johnson",
+  //     email: "sarah@abctech.com",
+  //     phone: "+1-234-567-8901",
+  //     company: "ABC Technologies",
+  //     status: "Pending",
+  //     lastFollowup: "2024-12-25",
+  //     nextFollowup: "2024-12-28",
+  //     paymentStatus: "Partial",
+  //     totalAmount: 75000,
+  //     paidAmount: 25000,
+  //     conversations: 3,
+  //     chatMessages: [],
+  //     followups: []
+  //   }
+  // ]);
+ 
+  const [clients,setClients]=useState<Client[]>([])
 
   const addClient = (clientData: any) => {
     const newClient: Client = {
       ...clientData,
-      id: clients.length + 1,
+      // id: clients.length + 1,
       conversations: 0,
       chatMessages: [],
       followups: [],
       totalAmount: 0,
       paidAmount: 0
     };
-    setClients([...clients, newClient]);
+    // setClients([...clients, newClient]);
+
+    // at the top of the list
+    setClients(prevClients=>[newClient,...prevClients])
     setShowForm(false);
   };
 
   const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
+    client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.projectManager?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeClients = clients.filter(client => client.status === "Active").length;
-  const pendingPayments = clients.filter(client => client.paymentStatus === "Pending").length;
+  const activeClients = clients.filter(client => {
+    // client.status === "Active"
+    const statusStr = typeof client.status === "boolean" ? (client.status ? "Active" : "Inactive") : client.status;
+    return statusStr === "Active";
+  }).length;
+  const pendingPayments = clients.filter(client => client.paymentStatus === "Due").length;
 
-  if (showForm) {
-    return <ClientForm onSave={addClient} onCancel={() => setShowForm(false)} />;
-  }
+  // if (showForm) {
+  //   return <ClientForm onSave={addClient} onCancel={() => setShowForm(false)} />;
+  // }
+
+  useEffect(()=>{
+     const fetchData=async()=>{
+        try {
+            const response=await axios.get('http://localhost:3006/clients')
+            const backendClients=response.data
+
+            // map id to _id
+            const normalizedClients=backendClients.map((client:any)=>({
+                  ...client,
+                  id:client._id,
+            }))
+   
+          // console.log('This is the backend get from local host',getbackendData.data)
+          setClients(normalizedClients)
+        } catch (error) {
+           console.log(error)
+        }
+       
+
+     }
+
+    
+
+     fetchData()
+    // printallid()
+  },[])
+
+  console.log('this the client data',clients[0])
+  // const printallid=()=>{
+  //   clients.map((clinet)=>{
+  //     console.log('this is each client country code',clinet.country)
+  //   })
+  // }
 
   return (
+    
     <div className="space-y-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-6">
+      {showForm ? (
+      // Show the form
+      <ClientForm onSave={addClient} onCancel={() => setShowForm(false)} />
+    ) : (
+      // Show the normal content when form is not shown
+      <>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -100,6 +163,7 @@ export const ClientManagement = () => {
           </h1>
           <p className="text-gray-600 mt-2">Manage your clients and track their progress</p>
         </div>
+         
         <Button 
           onClick={() => setShowForm(true)} 
           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
@@ -174,6 +238,8 @@ export const ClientManagement = () => {
           <ClientList clients={filteredClients} onUpdate={setClients} />
         </CardContent>
       </Card>
+      </>
+    )}
     </div>
   );
 };
