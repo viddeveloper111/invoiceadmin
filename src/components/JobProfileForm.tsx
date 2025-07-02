@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,12 +28,37 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
     candidateName: editData?.candidateName || ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      ...formData,
-      skills: formData.skills.split(",").map(skill => skill.trim())
-    });
+
+    // Map frontend fields to backend schema
+    const payload = {
+      // You may need to resolve clientId from clientName in a real app
+      clientId: formData.clientName, // Replace with actual clientId in production
+      contactPersonName: formData.contactPerson,
+      skills: formData.skills.split(",").map((skill: string) => skill.trim()),
+      description: formData.description,
+      clientBudget: Number(formData.budget.replace(/[^0-9.-]+/g,"")), // Extract number
+      status: formData.status === "Active" ? true : false,
+      jd: formData.jdFile,
+      actionDetails: {
+        candidateName: formData.candidateName,
+        followUpDate: formData.followupDate,
+        // Add other actionDetails fields if needed
+      },
+      // interviewActionDetails can be added if needed
+    };
+
+    try {
+      await axios.post("https://api.vidhema.com/createJobProfile", payload);
+      onSave({
+        ...formData,
+        skills: formData.skills.split(",").map((skill: string) => skill.trim())
+      });
+    } catch (error) {
+      alert("Failed to create job profile");
+      console.error(error);
+    }
   };
 
   const handleChange = (field: string, value: string) => {

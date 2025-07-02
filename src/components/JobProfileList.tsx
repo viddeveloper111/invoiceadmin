@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Edit, Calendar, Send, Users, Clock, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 
 interface JobProfile {
-  id: number;
+  id: string;
   title: string;
   clientName: string;
   contactPerson: string;
@@ -33,12 +33,12 @@ interface JobProfileListProps {
 }
 
 export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListProps) => {
-  const [editingFollowup, setEditingFollowup] = useState<number | null>(null);
+  const [editingFollowup, setEditingFollowup] = useState<string | null>(null);
   const [newFollowupDate, setNewFollowupDate] = useState("");
-  const [sendProfileDialog, setSendProfileDialog] = useState<number | null>(null);
+  const [sendProfileDialog, setSendProfileDialog] = useState<string | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState("");
   const [sendDateTime, setSendDateTime] = useState("");
-  const [scheduleInterview, setScheduleInterview] = useState<number | null>(null);
+  const [scheduleInterview, setScheduleInterview] = useState<string | null>(null);
   const [interviewDate, setInterviewDate] = useState("");
 
   const getStatusColor = (status: string) => {
@@ -52,7 +52,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
     }
   };
 
-  const updateFollowupDate = (id: number) => {
+  const updateFollowupDate = (id: string) => {
     const updatedProfiles = profiles.map(profile =>
       profile.id === id ? { ...profile, followupDate: newFollowupDate } : profile
     );
@@ -61,21 +61,21 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
     setNewFollowupDate("");
   };
 
-  const sendProfileToClient = (id: number) => {
+  const sendProfileToClient = (id: string) => {
     if (!selectedCandidate || !sendDateTime) return;
-    
+
     const updatedProfiles = profiles.map(profile =>
-      profile.id === id 
-        ? { 
-            ...profile, 
-            profilesSent: profile.profilesSent + 1,
-            status: "Profile Sent",
-            candidateName: selectedCandidate,
-            sentProfiles: [
-              ...(profile.sentProfiles || []),
-              { candidateName: selectedCandidate, sentDate: sendDateTime }
-            ]
-          } 
+      profile.id === id
+        ? {
+          ...profile,
+          profilesSent: profile.profilesSent + 1,
+          status: "Profile Sent",
+          candidateName: selectedCandidate,
+          sentProfiles: [
+            ...(profile.sentProfiles || []),
+            { candidateName: selectedCandidate, sentDate: sendDateTime }
+          ]
+        }
         : profile
     );
     onUpdate(updatedProfiles);
@@ -84,17 +84,17 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
     setSendDateTime("");
   };
 
-  const scheduleInterviewForProfile = (id: number) => {
+  const scheduleInterviewForProfile = (id: string) => {
     if (!interviewDate) return;
-    
+
     const updatedProfiles = profiles.map(profile =>
-      profile.id === id 
-        ? { 
-            ...profile, 
-            interviewScheduled: true, 
-            interviewDate: interviewDate,
-            status: "Interview Scheduled"
-          } 
+      profile.id === id
+        ? {
+          ...profile,
+          interviewScheduled: true,
+          interviewDate: interviewDate,
+          status: "Interview Scheduled"
+        }
         : profile
     );
     onUpdate(updatedProfiles);
@@ -102,11 +102,27 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
     setInterviewDate("");
   };
 
-  const closeJob = (id: number) => {
-    const updatedProfiles = profiles.map(profile =>
-      profile.id === id ? { ...profile, status: "Closed" } : profile
-    );
-    onUpdate(updatedProfiles);
+  const closeJob = async (id: string) => {
+    try {
+      console.log("button clicked!");
+      // Call the API to update the job status to "Closed"
+      await axios.put(
+        "http://localhost:3006/updateJobProfile",
+        { status: false }, // send the new status in the body
+        {
+          headers: { 'Content-Type': 'application/json' },
+          params: { id }
+        }
+      );
+      // Update the UI only after successful API call
+      const updatedProfiles = profiles.map(profile =>
+        profile.id === id ? { ...profile, status: "Closed" } : profile
+      );
+      onUpdate(updatedProfiles);
+      console.log("Job status updated to Closed");
+    } catch (error) {
+      console.error("Error updating job status:", error);
+    }
   };
 
   return (
@@ -120,7 +136,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                   <h3 className="text-xl font-semibold text-gray-900">{profile.title}</h3>
                   <Badge className={getStatusColor(profile.status)}>{profile.status}</Badge>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
                   <div>
                     <p className="font-medium text-gray-900">Client</p>
@@ -253,7 +269,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                       </div>
                     </DialogContent>
                   </Dialog>
-                  
+
                   {profile.status === "Profile Sent" && (
                     <Dialog>
                       <DialogTrigger asChild>
@@ -288,15 +304,15 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                 </div>
 
                 <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => onEdit(profile)}
                   >
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  
+
                   <Button
                     size="sm"
                     variant="outline"
