@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, User, Building2, Mail, Phone, Calendar, CreditCard, FileText } from "lucide-react";
+import axios from 'axios'
 
 interface ClientFormProps {
   onSave: (data: any) => void;
@@ -16,9 +17,10 @@ interface ClientFormProps {
 export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
   const [formData, setFormData] = useState({
     name: "",
-    contactPerson: "",
+    projectManager: "",
+    contactPerson:"",
     email: "",
-    phone: "",
+    mobileNo: "",
     company: "",
     status: "Active",
     nextFollowup: "",
@@ -26,13 +28,37 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
     notes: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+        // Convert status string to boolean for backend
+    // const statusBool = formData.status === "Active" ? true : false;
+       onSave({
       ...formData,
+        status: formData.status === "Active", // convert string to boolean
       lastFollowup: new Date().toISOString().split('T')[0]
     });
+
+    const payload = {
+  ...formData,
+  lastFollowup: new Date().toISOString().split("T")[0],
+  status: formData.status === "Active"
   };
+    console.log("📤 Sending payload:", payload);
+   
+    try {
+     
+    const saveData=await axios.post('http://localhost:3006/clients',
+      payload,
+       { headers: { 'Content-Type': 'application/json' }} )
+       
+    console.log('This is the client form data',saveData.data)
+      
+    } catch (error) {
+        console.log('there is error in submitting the data',error)
+    }
+   
+  };
+  console.log('this is the formdata ',formData)
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -129,9 +155,9 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       Phone Number
                     </Label>
                     <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
+                      id="mobileNo"
+                      value={formData.mobileNo}
+                      onChange={(e) => handleChange("mobileNo", e.target.value)}
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="+1 (555) 123-4567"
                       required
