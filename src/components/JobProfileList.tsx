@@ -107,11 +107,10 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
       console.log("button clicked!");
       // Call the API to update the job status to "Closed"
       await axios.put(
-        "http://localhost:3006/updateJobProfile",
-        { status: false }, // send the new status in the body
+        `http://localhost:3006/updateJobProfile/${id}`,
+        { status: "Closed" }, // send the new status in the body
         {
           headers: { 'Content-Type': 'application/json' },
-          params: { id }
         }
       );
       // Update the UI only after successful API call
