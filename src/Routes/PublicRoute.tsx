@@ -6,7 +6,7 @@ const PublicRoute = () => {
 
   // if authenticate then redirect to dashboard page
   if (token) {
-    return <Navigate to={"/dashboard/dashboard"} />;
+    return <Navigate to={"/dashboard"} />;
   }
 
   // this return statement in this if the token is not then the children of the public route  and try to access /login then it will refuse

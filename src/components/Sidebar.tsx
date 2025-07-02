@@ -15,20 +15,20 @@ export const Sidebar = () => {
       id: "dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      path: "/dashboard/dashboard",
+      path: "/dashboard",
     },
     {
       id: "clients",
       label: "Client Management",
       icon: Users,
-      path: "/dashboard/client",
+      path: "/clients",
     },
-    { id: "jobs", label: "Job Profiles", icon: Briefcase, path: "/dashboard/job" },
+    { id: "jobs", label: "Job Profiles", icon: Briefcase, path: "/jobs" },
     {
       id: "analytics",
       label: "Analytics",
       icon: BarChart,
-      path: "/dashboard/analytics",
+      path: "/analytics",
     },
   ];
 
