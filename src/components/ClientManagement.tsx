@@ -107,7 +107,7 @@ export const ClientManagement =  () => {
     const statusStr = typeof client.status === "boolean" ? (client.status ? "Active" : "Inactive") : client.status;
     return statusStr === "Active";
   }).length;
-  const pendingPayments = clients.filter(client => client.paymentStatus === "Due").length;
+  const pendingPayments = clients.filter(client => client.paymentStatus === "Pending").length;
 
   // if (showForm) {
   //   return <ClientForm onSave={addClient} onCancel={() => setShowForm(false)} />;

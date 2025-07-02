@@ -65,7 +65,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
   const getPaymentColor = (status: string) => {
     switch (status) {
       case "Paid": return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      // case "Pending": return "bg-red-100 text-red-800 border-red-200";
+      case "Pending": return "bg-orange-100 text-orange-800 border-orange-200";
       case "Due": return "bg-red-100 text-red-800 border-red-200";
       case "Partial": return "bg-blue-100 text-blue-800 border-blue-200";
       case "Overdue": return "bg-red-100 text-red-800 border-red-200";
@@ -204,7 +204,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Phone</p>
-                    <p> {client.countryCode} {client.mobileNo}</p>
+                    <p> {client.countryCode} {client.mobileNo  || client.phone}</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Next Follow-up</p>
