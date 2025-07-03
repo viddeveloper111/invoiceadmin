@@ -48,35 +48,42 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // find the id of the given name from the backend data
-    const selectedClient = clients.find(client => client.name === formData.clientName)
+    const selectedClient = clients.find(client => client.name === formData.clientName);
+    if (!selectedClient) {
+      alert("Please select a client.");
+      return;
+    }
 
-    // Map frontend fields to backend schema
     const payload = {
-      // You may need to resolve clientId from clientName in a real app
-      clientId: selectedClient._id, // Replace with actual clientId in production
+      clientId: selectedClient._id,
+      title: formData.title,
       contactPersonName: formData.contactPerson,
       skills: formData.skills.split(",").map((skill: string) => skill.trim()),
       description: formData.description,
-      clientBudget: Number(formData.budget.replace(/[^0-9.-]+/g, "")), // Extract number
+      clientBudget: Number(formData.budget.replace(/[^0-9.-]+/g, "")),
       status: formData.status,
       jd: formData.jdFile,
       actionDetails: {
         candidateName: formData.candidateName,
         followUpDate: formData.followupDate,
-        // Add other actionDetails fields if needed
       },
-      // interviewActionDetails can be added if needed
     };
 
     try {
-      await axios.post("http://localhost:3006/createJobProfile", payload);
-      onSave({
-        ...formData,
-        skills: formData.skills.split(",").map((skill: string) => skill.trim())
-      });
+      if (editData) {
+        // EDIT MODE: update existing profile
+        await axios.put(`http://localhost:3006/updateJobProfile/${editData.id}`, payload);
+      } else {
+        // CREATE MODE: create new profile
+        const response = await axios.post("http://localhost:3006/createJobProfile", payload);
+        onSave({ ...formData, ...response.data });
+        // onSave({
+        //   ...formData,
+        //   skills: formData.skills.split(",").map((skill: string) => skill.trim())
+        // });
+      }
     } catch (error) {
-      alert("Failed to create job profile");
+      alert("Failed to save job profile");
       console.error(error);
     }
   };

@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,8 +34,9 @@ export const JobProfiles = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
 
-  useEffect(() => {
-    axios.get('http://localhost:3006/getAllJobProfiles')
+  const fetchJobProfiles = useCallback( async () => {
+    try {
+      axios.get('http://localhost:3006/getAllJobProfiles')
       .then(response => {
         setJobProfiles(
           response.data.map((item: any, index: number) => ({
@@ -47,7 +48,7 @@ export const JobProfiles = () => {
             budget: item.clientBudget?.toString() || "",
             skills: item.skills || [],
             description: item.description || "",
-            status: item.status === true ? "Active" : "Closed", // assume boolean
+            status: item.status || "", // assume boolean
             profilesSent: item.sentProfiles?.length || 0,
             interviewScheduled: item.interviewActionDetails?.proceedToInterview || false,
             interviewDate: item.interviewActionDetails?.interviewDateTime || "",
@@ -62,46 +63,14 @@ export const JobProfiles = () => {
       .catch(error => {
         console.log("Error to fetch jobProfilesData", error);
       });
-  }, []);
+    } catch (error) {
+      console.log(error);
+    }
+  },[]);
 
-  // const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([
-  //   {
-  //     id: 1,
-  //     title: "Senior React Developer",
-  //     clientName: "TechCorp Solutions",
-  //     contactPerson: "John Smith",
-  //     followupDate: "2024-12-30",
-  //     budget: "$80,000 - $100,000",
-  //     skills: ["React", "TypeScript", "Node.js", "AWS"],
-  //     description: "Looking for a senior React developer with 5+ years experience",
-  //     status: "Active",
-  //     profilesSent: 3,
-  //     interviewScheduled: false,
-  //     interviewDate: "",
-  //     jdFile: "react-dev-jd.pdf",
-  //     candidateName: "",
-  //     sentProfiles: []
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "Python Backend Developer",
-  //     clientName: "ABC Technologies",
-  //     contactPerson: "Sarah Johnson",
-  //     followupDate: "2024-12-28",
-  //     budget: "$70,000 - $90,000",
-  //     skills: ["Python", "Django", "PostgreSQL", "Docker"],
-  //     description: "Backend developer for fintech application",
-  //     status: "Interview Scheduled",
-  //     profilesSent: 5,
-  //     interviewScheduled: true,
-  //     interviewDate: "2024-12-29",
-  //     jdFile: "python-dev-jd.pdf",
-  //     candidateName: "Alice Johnson",
-  //     sentProfiles: [
-  //       { candidateName: "Alice Johnson", sentDate: "2024-12-26T10:00" }
-  //     ]
-  //   }
-  // ]);
+  useEffect(() => {
+    fetchJobProfiles();
+  },[fetchJobProfiles]);
 
   const addJobProfile = (profileData: any) => {
     if (editingProfile) {

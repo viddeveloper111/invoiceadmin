@@ -104,20 +104,16 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
 
   const closeJob = async (id: string) => {
     try {
-      console.log("button clicked!");
-      // Call the API to update the job status to "Closed"
       await axios.put(
         `http://localhost:3006/updateJobProfile/${id}`,
-        { status: "Closed" }, // send the new status in the body
-        {
-          headers: { 'Content-Type': 'application/json' },
-        }
+        { status: "Closed" },
+        { headers: { 'Content-Type': 'application/json' } }
       );
-      // Update the UI only after successful API call
-      const updatedProfiles = profiles.map(profile =>
-        profile.id === id ? { ...profile, status: "Closed" } : profile
-      );
-      onUpdate(updatedProfiles);
+      
+      // Fetch the latest profiles from the backend
+      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+      console.log(response.data, "response closeJob");
+      onUpdate(response.data); // Update UI with fresh data
       console.log("Job status updated to Closed");
     } catch (error) {
       console.error("Error updating job status:", error);
