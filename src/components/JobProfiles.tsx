@@ -8,23 +8,52 @@ import { JobProfileForm } from "./JobProfileForm";
 import { JobProfileList } from "./JobProfileList";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import axios from "axios";
+import { profile } from "console";
 
+interface PopulatedClientDetails {
+  _id: string;
+  name: string;
+}
+
+// interface SentProfile {
+//   candidateName: string;
+//   sentDate: string; 
+//   _id?: string; 
+// }
+
+interface ActionDetails {
+  inboxType?: "employee" | "candidate";
+  employeeId?: string;
+  candidateName?: string | null;
+  markAsSend?: boolean;
+  followUpDate?: string;
+}
+
+interface InterviewActionDetails {
+  proceedToInterview?: boolean;
+  interviewDateTime?: string;
+  markAsClose?: boolean;
+}
+
+// Main JobProfile interface
 interface JobProfile {
-  id: string;
+  _id: string;
+  clientId: PopulatedClientDetails;
   title: string;
-  clientName: string;
-  contactPerson: string;
-  followupDate: string;
-  budget: string;
+  contactPersonName: string;
   skills: string[];
   description: string;
+  clientBudget: number;
   status: string;
-  profilesSent: number;
-  interviewScheduled: boolean;
-  interviewDate: string;
-  jdFile: string;
-  candidateName: string;
-  sentProfiles: { candidateName: string; sentDate: string }[];
+  jd?: string;
+
+  actionDetails?: ActionDetails;
+  interviewActionDetails?: InterviewActionDetails;
+  // sentProfiles?: SentProfile[]; 
+
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 export const JobProfiles = () => {
@@ -34,66 +63,31 @@ export const JobProfiles = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
 
-  const fetchJobProfiles = useCallback( async () => {
-    try {
-      axios.get('http://localhost:3006/getAllJobProfiles')
-      .then(response => {
-        setJobProfiles(
-          response.data.map((item: any, index: number) => ({
-            id: String(item._id || index + 1), // or use item._id if converting Mongo _id to string
-            title: item.title || "Untitled", // fallback if title missing
-            clientName: item.clientId?.name || "Unknown Client",
-            contactPerson: item.contactPersonName || "N/A",
-            followupDate: item.actionDetails?.followUpDate || "",
-            budget: item.clientBudget?.toString() || "",
-            skills: item.skills || [],
-            description: item.description || "",
-            status: item.status || "", // assume boolean
-            profilesSent: item.sentProfiles?.length || 0,
-            interviewScheduled: item.interviewActionDetails?.proceedToInterview || false,
-            interviewDate: item.interviewActionDetails?.interviewDateTime || "",
-            jdFile: item.jdFile || "",
-            candidateName: item.candidateName || "",
-            sentProfiles: item.sentProfiles || []
-          }))
-        );
-
-        console.log(response.data);
-      })
-      .catch(error => {
-        console.log("Error to fetch jobProfilesData", error);
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  },[]);
-
   useEffect(() => {
-    fetchJobProfiles();
-  },[fetchJobProfiles]);
-
-  const addJobProfile = (profileData: any) => {
-    if (editingProfile) {
-      setJobProfiles(prevProfiles =>
-        prevProfiles.map(profile =>
-          profile.id === editingProfile.id
-            ? { ...profile, ...profileData }
-            : profile
-        )
-      );
-      setEditingProfile(null);
-    } else {
-      const newProfile: JobProfile = {
-        ...profileData,
-        id: jobProfiles.length + 1,
-        profilesSent: 0,
-        interviewScheduled: false,
-        interviewDate: "",
-        candidateName: profileData.candidateName || "",
-        sentProfiles: []
-      };
-      setJobProfiles([...jobProfiles, newProfile]);
+    const fetchJobProfiles = async () => {
+      try {
+        await axios.get('http://localhost:3006/getAllJobProfiles')
+          .then(response => {
+            setJobProfiles(response.data);
+          })
+          .catch(error => {
+            console.log("Error to fetch jobProfilesData", error);
+          });
+      } catch (error) {
+        console.log(error);
+      }
     }
+    fetchJobProfiles();
+  }, [])
+
+  const addJobProfile = async () => {
+    try {
+      const response = await axios.get('http://localhost:3006/getAllJobProfiles');
+      setJobProfiles(response.data);
+    } catch (error) {
+      console.log("Error fetching updated job profiles", error);
+    }
+    setEditingProfile(null);
     setShowForm(false);
   };
 
@@ -106,15 +100,19 @@ export const JobProfiles = () => {
     setJobProfiles(updatedProfiles);
   };
 
-  const filteredProfiles = jobProfiles.filter(profile => {
+  const sortedProfiles = [...jobProfiles].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const filteredProfiles = sortedProfiles.filter(profile => {
     const matchesSearch = profile.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+      profile?.clientId?.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || profile.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const activeProfiles = jobProfiles.filter(profile => profile.status === "Active").length;
-  const scheduledInterviews = jobProfiles.filter(profile => profile.interviewScheduled).length;
+  const scheduledInterviews = jobProfiles.filter(profile => profile.interviewActionDetails.proceedToInterview).length;
 
   if (showForm) {
     return (
