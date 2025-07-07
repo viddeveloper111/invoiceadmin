@@ -35,7 +35,7 @@ export const Login = ({ onLogin }: LoginProps) => {
         password: password.trim(),
       };
       if (!loginData.username || !loginData.password) {
-        alert("Please enter both email and password");
+       // alert("Please enter both email and password");
         setIsLoading(false);
         return;
       }
@@ -60,11 +60,11 @@ export const Login = ({ onLogin }: LoginProps) => {
       localStorage.setItem("Token", JSON.stringify(token));
 
       setIsLoading(false);
-      alert("Login Successfull");
+      // alert("Login Successfull");
       navigate("/dashboard");
     } catch (error) {
       console.log("This error in login", error);
-      alert("Not able to signin ");
+      // alert("Not able to signin ");
     }
   };
 
