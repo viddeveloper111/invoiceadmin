@@ -8,22 +8,50 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import axios from "axios";
 
+interface PopulatedClientDetails {
+  _id: string;
+  name: string; 
+}
+
+// interface SentProfile {
+//   candidateName: string;
+//   sentDate: string; 
+//   _id?: string; 
+// }
+
+interface ActionDetails {
+  inboxType?: "employee" | "candidate";
+  employeeId?: string;
+  candidateName?: string | null; 
+  markAsSend?: boolean;
+  followUpDate?: string;
+}
+
+interface InterviewActionDetails {
+  proceedToInterview?: boolean;
+  interviewDateTime?: string;
+  markAsClose?: boolean;
+}
+
+// Main JobProfile interface
 interface JobProfile {
-  id: string;
-  title: string;
-  clientName: string;
-  contactPerson: string;
-  followupDate: string;
-  budget: string;
-  skills: string[];
-  description: string;
-  status: string;
-  profilesSent: number;
-  interviewScheduled: boolean;
-  interviewDate: string;
-  jdFile: string;
-  candidateName?: string;
-  sentProfiles?: { candidateName: string; sentDate: string }[];
+  _id: string;
+  clientId: PopulatedClientDetails; 
+  title: string; 
+  contactPersonName: string; 
+  skills: string[]; 
+  description: string; 
+  clientBudget: number; 
+  status: string; 
+  jd?: string; 
+
+  actionDetails?: ActionDetails;
+  interviewActionDetails?: InterviewActionDetails;
+  // sentProfiles?: SentProfile[]; 
+
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 interface JobProfileListProps {
@@ -52,73 +80,84 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
     }
   };
 
-  const updateFollowupDate = (id: string) => {
-    const updatedProfiles = profiles.map(profile =>
-      profile.id === id ? { ...profile, followupDate: newFollowupDate } : profile
-    );
-    onUpdate(updatedProfiles);
-    setEditingFollowup(null);
-    setNewFollowupDate("");
+  const updateFollowupDate = async (id: string) => {
+    try {
+      await axios.put(
+        `http://localhost:3006/updateJobProfile/${id}`,
+        {
+          "actionDetails.followUpDate": newFollowupDate
+        },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      // Fetch the latest profiles from the backend
+      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+
+      onUpdate(response.data);
+      setEditingFollowup(null);
+      setNewFollowupDate("");
+    } catch (error) {
+      console.log("Error updating Followup Date", error);
+    }
   };
 
-  const sendProfileToClient = (id: string) => {
+  const sendProfileToClient = async (id: string) => {
     if (!selectedCandidate || !sendDateTime) return;
-
-    const updatedProfiles = profiles.map(profile =>
-      profile.id === id
-        ? {
-          ...profile,
-          profilesSent: profile.profilesSent + 1,
+    try {
+      await axios.put(
+        `http://localhost:3006/updateJobProfile/${id}`,
+        {
           status: "Profile Sent",
-          candidateName: selectedCandidate,
-          sentProfiles: [
-            ...(profile.sentProfiles || []),
-            { candidateName: selectedCandidate, sentDate: sendDateTime }
-          ]
-        }
-        : profile
-    );
-    onUpdate(updatedProfiles);
-    setSendProfileDialog(null);
-    setSelectedCandidate("");
-    setSendDateTime("");
-  };
+          "actionDetails.markAsSend": true,
+          "actionDetails.candidateName": selectedCandidate,
+          "actionDetails.followUpDate": sendDateTime
+        },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      // Fetch the latest profiles from the backend
+      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
 
-  const scheduleInterviewForProfile = (id: string) => {
+      onUpdate(response.data);
+      setSendProfileDialog(null);
+      setSelectedCandidate("");
+      setSendDateTime("");  
+    } catch (error) {
+      console.log("Error updating sent profile to client", error);
+    }
+  }
+
+  const scheduleInterviewForProfile = async (id: string) => {
     if (!interviewDate) return;
-
-    const updatedProfiles = profiles.map(profile =>
-      profile.id === id
-        ? {
-          ...profile,
-          interviewScheduled: true,
-          interviewDate: interviewDate,
+    try {
+      await axios.put(
+        `http://localhost:3006/updateJobProfile/${id}`,
+        {
+          "interviewActionDetails.interviewDateTime": interviewDate,
+          "interviewActionDetails.proceedToInterview": true,
           status: "Interview Scheduled"
-        }
-        : profile
-    );
-    onUpdate(updatedProfiles);
-    setScheduleInterview(null);
-    setInterviewDate("");
+        },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      // Fetch the latest profiles from the backend
+      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+      onUpdate(response.data);
+      setScheduleInterview(null);
+      setInterviewDate("");
+    } catch (error) {
+      console.error("Error updating schedule interview:", error);
+    }
   };
 
   const closeJob = async (id: string) => {
     try {
-      console.log("button clicked!");
-      // Call the API to update the job status to "Closed"
       await axios.put(
-        "http://localhost:3006/updateJobProfile",
-        { status: false }, // send the new status in the body
-        {
-          headers: { 'Content-Type': 'application/json' },
-          params: { id }
-        }
+        `http://localhost:3006/updateJobProfile/${id}`,
+        { status: "Closed" },
+        { headers: { 'Content-Type': 'application/json' } }
       );
-      // Update the UI only after successful API call
-      const updatedProfiles = profiles.map(profile =>
-        profile.id === id ? { ...profile, status: "Closed" } : profile
-      );
-      onUpdate(updatedProfiles);
+
+      // Fetch the latest profiles from the backend
+      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+      onUpdate(response.data); // Update UI with fresh data
       console.log("Job status updated to Closed");
     } catch (error) {
       console.error("Error updating job status:", error);
@@ -128,7 +167,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
   return (
     <div className="space-y-4">
       {profiles.map((profile) => (
-        <Card key={profile.id} className="hover:shadow-md transition-shadow">
+        <Card key={profile._id} className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
@@ -140,17 +179,16 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
                   <div>
                     <p className="font-medium text-gray-900">Client</p>
-                    <p>{profile.clientName}</p>
-                    <p className="text-xs">{profile.contactPerson}</p>
+                    <p className="text-xs">{profile.clientId.name}</p>
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Budget</p>
-                    <p>{profile.budget}</p>
+                    <p>{profile.clientBudget}</p>
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Follow-up Date</p>
                     <div className="flex items-center gap-2">
-                      {editingFollowup === profile.id ? (
+                      {editingFollowup === profile._id ? (
                         <div className="flex gap-1">
                           <Input
                             type="date"
@@ -160,7 +198,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                           />
                           <Button
                             size="sm"
-                            onClick={() => updateFollowupDate(profile.id)}
+                            onClick={() => updateFollowupDate(profile._id)}
                             className="h-8 px-2"
                           >
                             ✓
@@ -176,13 +214,13 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span>{new Date(profile.followupDate).toLocaleDateString()}</span>
+                          <span>{new Date(profile.actionDetails.followUpDate).toLocaleDateString()}</span>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              setEditingFollowup(profile.id);
-                              setNewFollowupDate(profile.followupDate);
+                              setEditingFollowup(profile._id);
+                              setNewFollowupDate(profile.actionDetails.followUpDate);
                             }}
                             className="h-6 w-6 p-0"
                           >
@@ -208,19 +246,19 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="font-medium text-gray-900">Profiles Sent</p>
-                    <p className="text-blue-600 font-semibold">{profile.profilesSent}</p>
+                    <p className="text-blue-600 font-semibold">{profile?.actionDetails.markAsSend === true ? "Yes": "No"}</p>
                   </div>
-                  {profile.candidateName && (
+                  {profile.actionDetails.candidateName && (
                     <div>
                       <p className="font-medium text-gray-900">Candidate</p>
-                      <p className="text-green-600 font-semibold">{profile.candidateName}</p>
+                      <p className="text-green-600 font-semibold">{profile.actionDetails.candidateName}</p>
                     </div>
                   )}
-                  {profile.interviewScheduled && (
+                  {profile.interviewActionDetails.interviewDateTime && (
                     <div>
                       <p className="font-medium text-gray-900">Interview Date</p>
                       <p className="text-green-600 font-semibold">
-                        {new Date(profile.interviewDate).toLocaleDateString()}
+                        {new Date(profile.interviewActionDetails.interviewDateTime).toLocaleDateString()}
                       </p>
                     </div>
                   )}
@@ -229,11 +267,16 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
 
               <div className="flex flex-col gap-2 ml-6">
                 <div className="flex gap-2">
-                  <Dialog>
+                  <Dialog open={sendProfileDialog === profile._id} onOpenChange={open => setSendProfileDialog(open ? profile._id : null)}>
                     <DialogTrigger asChild>
                       <Button
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          setSendProfileDialog(profile._id);
+                          setSelectedCandidate("");
+                          setSendDateTime("");
+                        }}
                       >
                         <Send className="h-4 w-4 mr-1" />
                         Send Profile
@@ -261,7 +304,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                           />
                         </div>
                         <Button
-                          onClick={() => sendProfileToClient(profile.id)}
+                          onClick={() => sendProfileToClient(profile._id)}
                           className="w-full"
                         >
                           Send Profile
@@ -271,9 +314,17 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                   </Dialog>
 
                   {profile.status === "Profile Sent" && (
-                    <Dialog>
+                    <Dialog 
+                    open={scheduleInterview === profile._id}
+                    onOpenChange={open => setScheduleInterview(open ? profile._id : null)}
+                    >
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline"
+                        onClick={() => {
+                          setScheduleInterview(profile._id);
+                          setInterviewDate("");
+                        }}
+                        >
                           <Calendar className="h-4 w-4 mr-1" />
                           Schedule Interview
                         </Button>
@@ -292,7 +343,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                             />
                           </div>
                           <Button
-                            onClick={() => scheduleInterviewForProfile(profile.id)}
+                            onClick={() => scheduleInterviewForProfile(profile._id)}
                             className="w-full"
                           >
                             Schedule Interview
@@ -316,7 +367,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => closeJob(profile.id)}
+                    onClick={() => closeJob(profile._id)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <X className="h-4 w-4 mr-1" />
