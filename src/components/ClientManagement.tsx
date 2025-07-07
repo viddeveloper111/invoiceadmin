@@ -19,7 +19,7 @@ interface Client {
   projectManager: string|null;
   profileImage: string | null;
   serialNo: string;
-  status: boolean | string;
+  status: string;
   country: string;
   countryCode: string;
   createdAt: string;
@@ -102,11 +102,11 @@ export const ClientManagement =  () => {
     client.projectManager?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeClients = clients.filter(client => {
-    // client.status === "Active"
-    const statusStr = typeof client.status === "boolean" ? (client.status ? "Active" : "Inactive") : client.status;
-    return statusStr === "Active";
-  }).length;
+  const activeClients = clients.filter(client => 
+    client.status === "Active"
+    // const statusStr = typeof client.status === "boolean" ? (client.status ? "Active" : "Inactive") : client.status;
+    // return statusStr === "Active";
+  ).length;
   const pendingPayments = clients.filter(client => client.paymentStatus === "Pending").length;
 
   // if (showForm) {
@@ -235,7 +235,7 @@ export const ClientManagement =  () => {
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <ClientList clients={filteredClients} onUpdate={setClients} />
+          <ClientList clients={filteredClients} onUpdate={setClients}  />
         </CardContent>
       </Card>
       </>

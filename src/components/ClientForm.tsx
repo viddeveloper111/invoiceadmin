@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, User, Building2, Mail, Phone, Calendar, CreditCard, FileText } from "lucide-react";
 import axios from 'axios'
+import { useNavigate } from "react-router-dom";
 
 interface ClientFormProps {
   onSave: (data: any) => void;
@@ -15,6 +16,7 @@ interface ClientFormProps {
 }
 
 export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
+  
   const [formData, setFormData] = useState({
     name: "",
     projectManager: "",
@@ -34,14 +36,15 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
     // const statusBool = formData.status === "Active" ? true : false;
        onSave({
       ...formData,
-        status: formData.status === "Active", // convert string to boolean
+        // status: formData.status === "Active", // convert string to boolean
       lastFollowup: new Date().toISOString().split('T')[0]
     });
 
     const payload = {
   ...formData,
   lastFollowup: new Date().toISOString().split("T")[0],
-  status: formData.status === "Active"
+  // status: formData.status === "Active"
+  
   };
     console.log("📤 Sending payload:", payload);
    
@@ -51,7 +54,10 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
       payload,
        { headers: { 'Content-Type': 'application/json' }} )
        
-    console.log('This is the client form data',saveData.data)
+      console.log('This is the client form data',saveData.data)
+
+      onCancel()
+
       
     } catch (error) {
         console.log('there is error in submitting the data',error)

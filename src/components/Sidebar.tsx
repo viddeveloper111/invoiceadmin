@@ -46,7 +46,7 @@ export const Sidebar = () => {
     setUser("null");
     navigate("/login");
     console.log("Navigate to login page");
-    alert("Navigate to login page");
+    // alert("Navigate to login page");
   };
   const location = useLocation();
   return (
