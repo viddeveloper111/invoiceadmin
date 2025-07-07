@@ -528,7 +528,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
-                          Chat History - {client.name}
+                          Recap History - {client.name}
                         </DialogTitle>
                       </DialogHeader>
                       <div className="flex-1 overflow-hidden flex flex-col">

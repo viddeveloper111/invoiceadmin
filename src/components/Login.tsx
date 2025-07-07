@@ -35,7 +35,7 @@ export const Login = ({ onLogin }: LoginProps) => {
         password: password.trim(),
       };
       if (!loginData.username || !loginData.password) {
-        alert("Please enter both email and password");
+       // alert("Please enter both email and password");
         setIsLoading(false);
         return;
       }
