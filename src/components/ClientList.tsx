@@ -346,7 +346,8 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
 
               <div className="flex flex-col gap-3 ml-6">
                 <div className="flex gap-2">
-                  <Dialog open={editUps===client.id} onOpenChange={()=>setEditUps(null)}>
+                  <Dialog open={editUps===client.id} onOpenChange={(open)=>setEditUps(open ? client.id :null)}>
+                  <DialogTrigger asChild>
                     <Button
                       size="sm"
                       variant="outline"
@@ -360,7 +361,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
-
+                 </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
@@ -441,8 +442,8 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog open={followUps===client.id} onOpenChange={()=>setFollowUps(null)}>
-                   
+                  <Dialog open={followUps===client.id} onOpenChange={(open) => setFollowUps(open ? client.id : null)}>
+                   <DialogTrigger asChild>
                       <Button
                         size="sm"
                         variant="outline"
@@ -457,7 +458,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                         <Calendar className="h-4 w-4 mr-1" />
                         Follow-up
                       </Button>
-                   
+                  </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
@@ -513,8 +514,8 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Dialog open={chatUps===client.id} onOpenChange={()=>setChatUps(null)}>
-                   
+                  <Dialog open={chatUps===client.id} onOpenChange={(open)=>setChatUps(open ? client.id :null)}>
+                    <DialogTrigger asChild>
                       <Button
                         size="sm"
                         variant="outline"
@@ -524,7 +525,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                         <MessageCircle className="h-4 w-4 mr-1" />
                         Recap ({client.conversations || 0})
                       </Button>
-                   
+                   </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
@@ -587,8 +588,8 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog open={paymentDialog===client.id} onOpenChange={()=>setPaymentDialog(null)}>
-                   
+                  <Dialog open={paymentDialog===client.id} onOpenChange={(open)=>setPaymentDialog(open ? client.id :null)}>
+                   <DialogTrigger asChild>
                       <Button
                         size="sm"
                         variant="outline"
@@ -605,7 +606,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                         <CreditCard className="h-4 w-4 mr-1" />
                         Payment
                       </Button>
-                  
+                  </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
