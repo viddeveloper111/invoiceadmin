@@ -16,9 +16,6 @@ interface JobProfileFormProps {
 
 export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormProps) => {
   const [clients, setClients] = useState<{ _id: string, name: string }[]>([]);
-
-  // const [clients, setClients] = useState<{_id(_id: any): unknown; id: string, name: string}[]>([]);
-
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
