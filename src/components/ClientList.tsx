@@ -139,7 +139,8 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
       console.log("thiere is error in updating", error);
     }
   };
-
+ console.log("saving client", editingClient, editFormData);
+  console.log("Follow Up  client", followUps, followupData);
   const saveEdit = (e) => {
     e.preventDefault();
     if (editingClient) {
