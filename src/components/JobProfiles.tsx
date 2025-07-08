@@ -8,7 +8,7 @@ import { JobProfileForm } from "./JobProfileForm";
 import { JobProfileList } from "./JobProfileList";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import axios from "axios";
-import { profile } from "console";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 interface PopulatedClientDetails {
   _id: string;
@@ -57,8 +57,9 @@ interface JobProfile {
 }
 
 export const JobProfiles = () => {
-  const [showForm, setShowForm] = useState(false);
-  const [editingProfile, setEditingProfile] = useState<JobProfile | null>(null);
+  const navigate = useNavigate();
+  const params = useParams();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
@@ -84,16 +85,14 @@ export const JobProfiles = () => {
     try {
       const response = await axios.get('http://localhost:3006/getAllJobProfiles');
       setJobProfiles(response.data);
+      navigate("/jobs");
     } catch (error) {
       console.log("Error fetching updated job profiles", error);
     }
-    setEditingProfile(null);
-    setShowForm(false);
   };
 
   const handleEdit = (profile: JobProfile) => {
-    setEditingProfile(profile);
-    setShowForm(true);
+    navigate(`/jobs/edit/${profile._id}`);
   };
 
   const handleUpdateProfiles = (updatedProfiles: JobProfile[]) => {
@@ -112,17 +111,32 @@ export const JobProfiles = () => {
   });
 
   const activeProfiles = jobProfiles.filter(profile => profile.status === "Active").length;
-  const scheduledInterviews = jobProfiles.filter(profile => profile.interviewActionDetails.proceedToInterview).length;
+  const scheduledInterviews = jobProfiles.filter(profile => profile.status === "Interview Scheduled").length;
+  // const scheduledInterviews = jobProfiles.filter(profile => profile.interviewActionDetails.proceedToInterview).length;
 
-  if (showForm) {
+  // Find the profile to edit if on /jobs/edit/:id
+  let editData = null;
+  if (location.pathname.startsWith("/jobs/edit") && params.id) {
+    editData = jobProfiles.find(p => p._id === params.id) || null;
+    console.log("editData is: ", editData);
+  }
+
+  // Render the form for create or edit
+  if (location.pathname === "/jobs/create") {
     return (
       <JobProfileForm
         onSave={addJobProfile}
-        onCancel={() => {
-          setShowForm(false);
-          setEditingProfile(null);
-        }}
-        editData={editingProfile}
+        onCancel={() => navigate("/jobs")}
+        editData={null}
+      />
+    );
+  }
+  if (location.pathname.startsWith("/jobs/edit") && params.id) {
+    return (
+      <JobProfileForm
+        onSave={addJobProfile}
+        onCancel={() => navigate("/jobs")}
+        editData={editData}
       />
     );
   }
@@ -137,7 +151,9 @@ export const JobProfiles = () => {
           <p className="text-gray-600 mt-2">Manage job openings and track candidate progress</p>
         </div>
         <Button
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            navigate("/jobs/create");
+          }}
           className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
           size="lg"
         >
