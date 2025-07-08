@@ -10,7 +10,7 @@ import axios from "axios";
 
 interface PopulatedClientDetails {
   _id: string;
-  name: string; 
+  name: string;
 }
 
 // interface SentProfile {
@@ -22,7 +22,7 @@ interface PopulatedClientDetails {
 interface ActionDetails {
   inboxType?: "employee" | "candidate";
   employeeId?: string;
-  candidateName?: string | null; 
+  candidateName?: string | null;
   markAsSend?: boolean;
   followUpDate?: string;
 }
@@ -36,14 +36,14 @@ interface InterviewActionDetails {
 // Main JobProfile interface
 interface JobProfile {
   _id: string;
-  clientId: PopulatedClientDetails; 
-  title: string; 
-  contactPersonName: string; 
-  skills: string[]; 
-  description: string; 
-  clientBudget: number; 
-  status: string; 
-  jd?: string; 
+  clientId: PopulatedClientDetails;
+  title: string;
+  contactPersonName: string;
+  skills: string[];
+  description: string;
+  clientBudget: number;
+  status: string;
+  jd?: string;
 
   actionDetails?: ActionDetails;
   interviewActionDetails?: InterviewActionDetails;
@@ -119,7 +119,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
       onUpdate(response.data);
       setSendProfileDialog(null);
       setSelectedCandidate("");
-      setSendDateTime("");  
+      setSendDateTime("");
     } catch (error) {
       console.log("Error updating sent profile to client", error);
     }
@@ -246,7 +246,7 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="font-medium text-gray-900">Profiles Sent</p>
-                    <p className="text-blue-600 font-semibold">{profile?.actionDetails.markAsSend === true ? "Yes": "No"}</p>
+                    <p className="text-blue-600 font-semibold">{profile?.actionDetails.markAsSend === true ? "Yes" : "No"}</p>
                   </div>
                   {profile.actionDetails.candidateName && (
                     <div>
@@ -314,16 +314,16 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                   </Dialog>
 
                   {profile.status === "Profile Sent" && (
-                    <Dialog 
-                    open={scheduleInterview === profile._id}
-                    onOpenChange={open => setScheduleInterview(open ? profile._id : null)}
+                    <Dialog
+                      open={scheduleInterview === profile._id}
+                      onOpenChange={open => setScheduleInterview(open ? profile._id : null)}
                     >
                       <DialogTrigger asChild>
                         <Button size="sm" variant="outline"
-                        onClick={() => {
-                          setScheduleInterview(profile._id);
-                          setInterviewDate("");
-                        }}
+                          onClick={() => {
+                            setScheduleInterview(profile._id);
+                            setInterviewDate("");
+                          }}
                         >
                           <Calendar className="h-4 w-4 mr-1" />
                           Schedule Interview

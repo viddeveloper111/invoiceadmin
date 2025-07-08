@@ -77,13 +77,10 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
     try {
       if (editData) {
         const response = await axios.put(`http://localhost:3006/updateJobProfile/${editData._id}`, payload);
-        console.log("response on update profile", response.data);
       } else {
         const response = await axios.post("http://localhost:3006/createJobProfile", payload);
-        console.log("response on create job profile", response.data);
       }
       onSave();
-      onCancel();
     } catch (error) {
       console.log("Failed to save job profile");
       console.error(error);
