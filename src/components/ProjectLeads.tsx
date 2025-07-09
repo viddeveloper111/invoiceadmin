@@ -61,7 +61,7 @@ interface JobProfile {
   __v: number;
 }
 
-export const JobProfiles = () => {
+export const ProjectLeads = () => {
   const navigate = useNavigate();
   const params = useParams();
   const location = useLocation();
@@ -160,10 +160,10 @@ export const JobProfiles = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Job Profiles
+            Project Leads
           </h1>
           <p className="text-gray-600 mt-2">
-            Manage job openings and track candidate progress
+            Lead project execution and monitor milestones.
           </p>
         </div>
         <Button
@@ -174,7 +174,7 @@ export const JobProfiles = () => {
           size="lg"
         >
           <Plus className="h-5 w-5 mr-2" />
-          Add New Job Profile
+          Add New Projects
         </Button>
       </div>
 
@@ -185,7 +185,7 @@ export const JobProfiles = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Total Profiles
+                  Total Projects
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
                   {jobProfiles.length}
@@ -203,7 +203,7 @@ export const JobProfiles = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Active Profiles
+                  Active Projects
                 </p>
                 <p className="text-3xl font-bold text-green-600">
                   {activeProfiles}
@@ -239,13 +239,13 @@ export const JobProfiles = () => {
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <CardTitle className="text-xl font-semibold text-gray-800">
-              Job Profile Directory
+              Projects Profile Directory
             </CardTitle>
             <div className="flex gap-4">
               <div className="relative w-80">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search job profiles by title or client..."
+                  placeholder="Search here projects by title or client..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-11 border-gray-200 focus:border-purple-500 focus:ring-purple-500"

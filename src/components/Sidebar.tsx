@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, Briefcase, BarChart } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, BarChart ,UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -24,6 +24,12 @@ export const Sidebar = () => {
       path: "/clients",
     },
     { id: "jobs", label: "Job Profiles", icon: Briefcase, path: "/jobs" },
+     {
+      id: "projectleads",
+      label: "ProjectLeads",
+      icon: UserCheck,
+      path: "/projects",
+    },
     {
       id: "analytics",
       label: "Analytics",

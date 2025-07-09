@@ -13,6 +13,7 @@ import { JobProfileForm } from "./components/JobProfileForm";
 import { JobProfiles } from "./components/JobProfiles";
 import { Analytics } from "./components/Analytics";
 import { Dashboard } from "./components/Dashboard";
+import { ProjectLeads } from "./components/ProjectLeads";
 // import {ProtectedRoute} from '../src/Routes/ProtectedRoute'
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="clients/*" element={<ClientManagement />} />
+                <Route path="projects/*" element={<ProjectLeads/>} />
                 <Route path="jobs" element={<JobProfiles />}>
                   <Route index element={<JobProfiles />} />
                   <Route path="create" element={<JobProfileForm onSave={() => { }} onCancel={() => { }} editData={null} />} />

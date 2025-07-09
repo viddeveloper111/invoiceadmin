@@ -35,17 +35,21 @@ export const Login = ({ onLogin }: LoginProps) => {
         password: password.trim(),
       };
       if (!loginData.username || !loginData.password) {
-       // alert("Please enter both email and password");
+        // alert("Please enter both email and password");
         setIsLoading(false);
         return;
       }
 
+      // getting the env data of the api
+
+      const baseURL = import.meta.env.VITE_API_URL;
+
+      // "https://api.vidhema.com/users/login",
+
       // Now putting the axios request
-      const result = await axios.post(
-        "https://api.vidhema.com/users/login",
-        loginData,
-        { headers: { "Content-Type": "application/json" } }
-      );
+      const result = await axios.post(`${baseURL}/users/login`, loginData, {
+        headers: { "Content-Type": "application/json" },
+      });
       console.log("This is posted data of signin", result.data);
       console.log(result.data.user);
       const { user, token } = result.data;

@@ -122,10 +122,14 @@ export const ClientManagement = () => {
   //   return <ClientForm onSave={addClient} onCancel={() => setShowForm(false)} />;
   // }
 
+  // getting the env data of the api
+
+      const baseURL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:3006/clients");
+        const response = await axios.get(`${baseURL}/clients`);
         const backendClients = response.data;
 
         // map id to _id

@@ -1,13 +1,27 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, User, Building2, Mail, Phone, Calendar, CreditCard, FileText } from "lucide-react";
-import axios from 'axios'
+import {
+  ArrowLeft,
+  User,
+  Building2,
+  Mail,
+  Phone,
+  Calendar,
+  CreditCard,
+  FileText,
+} from "lucide-react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 interface ClientFormProps {
@@ -16,66 +30,66 @@ interface ClientFormProps {
 }
 
 export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
-  
   const [formData, setFormData] = useState({
     name: "",
     projectManager: "",
-    contactPerson:"",
+    contactPerson: "",
     email: "",
     mobileNo: "",
     company: "",
     status: "Active",
     nextFollowup: "",
     paymentStatus: "Paid",
-    notes: ""
+    notes: "",
   });
 
+  // getting the env data of the api
+
+  const baseURL = import.meta.env.VITE_API_URL;
+
+  //  oldapi = https://api.vidhema.com/clients
+
   const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-        // Convert status string to boolean for backend
+    e.preventDefault();
+    // Convert status string to boolean for backend
     // const statusBool = formData.status === "Active" ? true : false;
-       onSave({
+    onSave({
       ...formData,
-        // status: formData.status === "Active", // convert string to boolean
-      lastFollowup: new Date().toISOString().split('T')[0]
+      // status: formData.status === "Active", // convert string to boolean
+      lastFollowup: new Date().toISOString().split("T")[0],
     });
 
     const payload = {
-  ...formData,
-  lastFollowup: new Date().toISOString().split("T")[0],
-  // status: formData.status === "Active"
-  
-  };
+      ...formData,
+      lastFollowup: new Date().toISOString().split("T")[0],
+      // status: formData.status === "Active"
+    };
     console.log("📤 Sending payload:", payload);
-   
+
     try {
-     
-    const saveData=await axios.post('http://localhost:3006/clients',
-      payload,
-       { headers: { 'Content-Type': 'application/json' }} )
-       
-      console.log('This is the client form data',saveData.data)
+      const saveData = await axios.post(`${baseURL}/clients`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
 
-      onCancel()
+      console.log("This is the client form data", saveData.data);
 
-      
+      onCancel();
     } catch (error) {
-        console.log('there is error in submitting the data',error)
+      console.log("there is error in submitting the data", error);
     }
-   
   };
-  console.log('this is the formdata ',formData)
+  console.log("this is the formdata ", formData);
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={onCancel}
             className="hover:bg-white/60 backdrop-blur-sm border border-gray-200"
           >
@@ -86,7 +100,9 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Add New Client
             </h1>
-            <p className="text-gray-600 mt-1">Create a new client profile with complete information</p>
+            <p className="text-gray-600 mt-1">
+              Create a new client profile with complete information
+            </p>
           </div>
         </div>
 
@@ -103,12 +119,17 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
               <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-800">Basic Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Basic Information
+                  </h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="name"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <Building2 className="h-4 w-4 text-blue-600" />
                       Client Name
                     </Label>
@@ -121,16 +142,21 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="contactPerson" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="contactPerson"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <User className="h-4 w-4 text-blue-600" />
                       Contact Person
                     </Label>
                     <Input
                       id="contactPerson"
                       value={formData.contactPerson}
-                      onChange={(e) => handleChange("contactPerson", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("contactPerson", e.target.value)
+                      }
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="Primary contact person"
                       required
@@ -140,7 +166,10 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="email"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <Mail className="h-4 w-4 text-blue-600" />
                       Email Address
                     </Label>
@@ -154,9 +183,12 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="phone"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <Phone className="h-4 w-4 text-blue-600" />
                       Phone Number
                     </Label>
@@ -172,7 +204,10 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="company" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Label
+                    htmlFor="company"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
                     <Building2 className="h-4 w-4 text-blue-600" />
                     Company Details
                   </Label>
@@ -191,13 +226,20 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
               <div className="space-y-6 pt-6 border-t border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <Calendar className="h-5 w-5 text-purple-600" />
-                  <h3 className="text-lg font-semibold text-gray-800">Status & Scheduling</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Status & Scheduling
+                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Client Status</Label>
-                    <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
+                    <Label className="text-sm font-semibold text-gray-700">
+                      Client Status
+                    </Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => handleChange("status", value)}
+                    >
                       <SelectTrigger className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-lg">
                         <SelectValue />
                       </SelectTrigger>
@@ -210,7 +252,10 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="nextFollowup" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="nextFollowup"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <Calendar className="h-4 w-4 text-purple-600" />
                       Next Follow-up
                     </Label>
@@ -218,7 +263,9 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       id="nextFollowup"
                       type="date"
                       value={formData.nextFollowup}
-                      onChange={(e) => handleChange("nextFollowup", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("nextFollowup", e.target.value)
+                      }
                       className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-lg"
                     />
                   </div>
@@ -228,7 +275,12 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       <CreditCard className="h-4 w-4 text-green-600" />
                       Payment Status
                     </Label>
-                    <Select value={formData.paymentStatus} onValueChange={(value) => handleChange("paymentStatus", value)}>
+                    <Select
+                      value={formData.paymentStatus}
+                      onValueChange={(value) =>
+                        handleChange("paymentStatus", value)
+                      }
+                    >
                       <SelectTrigger className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg">
                         <SelectValue />
                       </SelectTrigger>
@@ -246,11 +298,18 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
               <div className="space-y-4 pt-6 border-t border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-5 w-5 text-orange-600" />
-                  <h3 className="text-lg font-semibold text-gray-800">Additional Notes</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Additional Notes
+                  </h3>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-sm font-semibold text-gray-700">Notes & Comments</Label>
+                  <Label
+                    htmlFor="notes"
+                    className="text-sm font-semibold text-gray-700"
+                  >
+                    Notes & Comments
+                  </Label>
                   <Textarea
                     id="notes"
                     value={formData.notes}
@@ -264,15 +323,15 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
 
               {/* Action Buttons */}
               <div className="flex gap-4 pt-6 border-t border-gray-200">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   💾 Save Client
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={onCancel}
                   className="flex-1 h-12 border-2 border-gray-300 hover:border-gray-400 rounded-lg font-semibold transition-all duration-200"
                 >

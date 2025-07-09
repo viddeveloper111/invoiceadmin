@@ -82,10 +82,9 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
     totalAmount: 0,
     paidAmount: 0,
   });
-  const [editUps, setEditUps] = useState<string | null >(null);  //store the client.id for the edit
+  const [editUps, setEditUps] = useState<string | null>(null); //store the client.id for the edit
   const [followUps, setFollowUps] = useState<string | null>(null); // store client.id
-  const [chatUps,setChatUps]=useState<string | null>(null)        //store the client.id for the chat purpose
-
+  const [chatUps, setChatUps] = useState<string | null>(null); //store the client.id for the chat purpose
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -117,6 +116,12 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
     }
   };
 
+  // getting the env data of the api
+
+  const baseURL = import.meta.env.VITE_API_URL;
+
+  //  old api `https://api.vidhema.com/clients/${id}`,
+
   const updateClient = async (id: string, updates: Partial<Client>) => {
     try {
       const updatePayload = {
@@ -125,7 +130,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
       console.log("Updating client with ID:", id);
       console.log("this is the updateclient data", updatePayload);
       const result = await axios.patch(
-        `http://localhost:3006/clients/${id}`,
+        `${baseURL}/clients/${id}`,
         updatePayload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -139,7 +144,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
       console.log("thiere is error in updating", error);
     }
   };
- console.log("saving client", editingClient, editFormData);
+  console.log("saving client", editingClient, editFormData);
   console.log("Follow Up  client", followUps, followupData);
   const saveEdit = (e) => {
     e.preventDefault();
@@ -151,7 +156,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
     }
   };
 
-  const addFollowup = (e,clientId: string) => {
+  const addFollowup = (e, clientId: string) => {
     e.preventDefault();
     const client = clients.find((c) => c.id === clientId);
     if (client && followupData.description && followupData.datetime) {
@@ -168,12 +173,11 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
       });
       setFollowUps(null);
       setFollowupData({ description: "", datetime: "" });
-      
     }
   };
 
-  const addChatMessage = (e,clientId: string) => {
-    e.preventDefault()
+  const addChatMessage = (e, clientId: string) => {
+    e.preventDefault();
     if (!newMessage.trim()) return;
     const client = clients.find((c) => c.id === clientId);
     if (client) {
@@ -187,13 +191,13 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
         chatMessages: [...messages, newMsg],
         conversations: (client.conversations || 0) + 1,
       });
-      setChatUps(null)
+      setChatUps(null);
       setNewMessage("");
     }
   };
 
-  const updatePaymentStatus = (e,clientId: string) => {
-    e.preventDefault()
+  const updatePaymentStatus = (e, clientId: string) => {
+    e.preventDefault();
     updateClient(clientId, {
       paymentStatus: paymentData.status,
       totalAmount: paymentData.totalAmount,
@@ -347,22 +351,25 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
 
               <div className="flex flex-col gap-3 ml-6">
                 <div className="flex gap-2">
-                  <Dialog open={editUps===client.id} onOpenChange={(open)=>setEditUps(open ? client.id :null)}>
-                  <DialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-blue-200 text-blue-700 hover:bg-blue-50"
-                      onClick={() => {
-                        setEditUps(client.id)
-                        setEditingClient(client.id);
-                        setEditFormData(client);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                 </DialogTrigger>
+                  <Dialog
+                    open={editUps === client.id}
+                    onOpenChange={(open) => setEditUps(open ? client.id : null)}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditUps(client.id);
+                          setEditingClient(client.id);
+                          setEditFormData(client);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
@@ -443,23 +450,26 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog open={followUps===client.id} onOpenChange={(open) => setFollowUps(open ? client.id : null)}>
-                   <DialogTrigger asChild>
+                  <Dialog
+                    open={followUps === client.id}
+                    onOpenChange={(open) =>
+                      setFollowUps(open ? client.id : null)
+                    }
+                  >
+                    <DialogTrigger asChild>
                       <Button
                         size="sm"
                         variant="outline"
                         className="border-green-200 text-green-700 hover:bg-green-50"
-                        onClick={()=>{
-
-                          setFollowUps(client.id)
-                          setFollowupData({description:"",datetime:""})  // reset the data
-                        }
-                        }
+                        onClick={() => {
+                          setFollowUps(client.id);
+                          setFollowupData({ description: "", datetime: "" }); // reset the data
+                        }}
                       >
                         <Calendar className="h-4 w-4 mr-1" />
                         Follow-up
                       </Button>
-                  </DialogTrigger>
+                    </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
@@ -504,7 +514,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                           />
                         </div>
                         <Button
-                          onClick={(e) => addFollowup(e,client.id)}
+                          onClick={(e) => addFollowup(e, client.id)}
                           className="w-full bg-green-600 hover:bg-green-700"
                         >
                           Schedule Follow-up
@@ -515,18 +525,21 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Dialog open={chatUps===client.id} onOpenChange={(open)=>setChatUps(open ? client.id :null)}>
+                  <Dialog
+                    open={chatUps === client.id}
+                    onOpenChange={(open) => setChatUps(open ? client.id : null)}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         size="sm"
                         variant="outline"
                         className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                        onClick={()=>setChatUps(client.id)}
+                        onClick={() => setChatUps(client.id)}
                       >
                         <MessageCircle className="h-4 w-4 mr-1" />
                         Recap ({client.conversations || 0})
                       </Button>
-                   </DialogTrigger>
+                    </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
@@ -574,12 +587,12 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="Enter your message about this client..."
                             onKeyPress={(e) =>
-                              e.key === "Enter" && addChatMessage(e,client.id)
+                              e.key === "Enter" && addChatMessage(e, client.id)
                             }
                             className="flex-1"
                           />
                           <Button
-                            onClick={(e) => addChatMessage(e,client.id)}
+                            onClick={(e) => addChatMessage(e, client.id)}
                             className="bg-purple-600 hover:bg-purple-700"
                           >
                             Send
@@ -589,8 +602,13 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog open={paymentDialog===client.id} onOpenChange={(open)=>setPaymentDialog(open ? client.id :null)}>
-                   <DialogTrigger asChild>
+                  <Dialog
+                    open={paymentDialog === client.id}
+                    onOpenChange={(open) =>
+                      setPaymentDialog(open ? client.id : null)
+                    }
+                  >
+                    <DialogTrigger asChild>
                       <Button
                         size="sm"
                         variant="outline"
@@ -607,7 +625,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                         <CreditCard className="h-4 w-4 mr-1" />
                         Payment
                       </Button>
-                  </DialogTrigger>
+                    </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
@@ -682,7 +700,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                         )}
 
                         <Button
-                          onClick={(e) => updatePaymentStatus(e,client.id)}
+                          onClick={(e) => updatePaymentStatus(e, client.id)}
                           className="w-full bg-orange-600 hover:bg-orange-700"
                         >
                           Update Payment Status

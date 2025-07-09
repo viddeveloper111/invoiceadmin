@@ -4,7 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Edit, Calendar, Send, Users, Clock, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
 
@@ -15,8 +21,8 @@ interface PopulatedClientDetails {
 
 // interface SentProfile {
 //   candidateName: string;
-//   sentDate: string; 
-//   _id?: string; 
+//   sentDate: string;
+//   _id?: string;
 // }
 
 interface ActionDetails {
@@ -47,7 +53,7 @@ interface JobProfile {
 
   actionDetails?: ActionDetails;
   interviewActionDetails?: InterviewActionDetails;
-  // sentProfiles?: SentProfile[]; 
+  // sentProfiles?: SentProfile[];
 
   createdAt: string;
   updatedAt: string;
@@ -60,37 +66,53 @@ interface JobProfileListProps {
   onEdit: (profile: JobProfile) => void;
 }
 
-export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListProps) => {
+export const JobProfileList = ({
+  profiles,
+  onUpdate,
+  onEdit,
+}: JobProfileListProps) => {
   const [editingFollowup, setEditingFollowup] = useState<string | null>(null);
   const [newFollowupDate, setNewFollowupDate] = useState("");
-  const [sendProfileDialog, setSendProfileDialog] = useState<string | null>(null);
+  const [sendProfileDialog, setSendProfileDialog] = useState<string | null>(
+    null
+  );
   const [selectedCandidate, setSelectedCandidate] = useState("");
   const [sendDateTime, setSendDateTime] = useState("");
-  const [scheduleInterview, setScheduleInterview] = useState<string | null>(null);
+  const [scheduleInterview, setScheduleInterview] = useState<string | null>(
+    null
+  );
   const [interviewDate, setInterviewDate] = useState("");
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Active": return "bg-green-100 text-green-800";
-      case "Profile Sent": return "bg-blue-100 text-blue-800";
-      case "Interview Scheduled": return "bg-purple-100 text-purple-800";
-      case "Closed": return "bg-gray-100 text-gray-800";
-      case "On Hold": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Active":
+        return "bg-green-100 text-green-800";
+      case "Profile Sent":
+        return "bg-blue-100 text-blue-800";
+      case "Interview Scheduled":
+        return "bg-purple-100 text-purple-800";
+      case "Closed":
+        return "bg-gray-100 text-gray-800";
+      case "On Hold":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const updateFollowupDate = async (id: string) => {
     try {
       await axios.put(
-        `http://localhost:3006/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         {
-          "actionDetails.followUpDate": newFollowupDate
+          "actionDetails.followUpDate": newFollowupDate,
         },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+      const response = await axios.get(
+        "https://api.vidhema.com/getAllJobProfiles"
+      );
 
       onUpdate(response.data);
       setEditingFollowup(null);
@@ -104,17 +126,19 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
     if (!selectedCandidate || !sendDateTime) return;
     try {
       await axios.put(
-        `http://localhost:3006/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         {
           status: "Profile Sent",
           "actionDetails.markAsSend": true,
           "actionDetails.candidateName": selectedCandidate,
-          "actionDetails.followUpDate": sendDateTime
+          "actionDetails.followUpDate": sendDateTime,
         },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+      const response = await axios.get(
+        "https://api.vidhema.com/getAllJobProfiles"
+      );
 
       onUpdate(response.data);
       setSendProfileDialog(null);
@@ -123,22 +147,24 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
     } catch (error) {
       console.log("Error updating sent profile to client", error);
     }
-  }
+  };
 
   const scheduleInterviewForProfile = async (id: string) => {
     if (!interviewDate) return;
     try {
       await axios.put(
-        `http://localhost:3006/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         {
           "interviewActionDetails.interviewDateTime": interviewDate,
           "interviewActionDetails.proceedToInterview": true,
-          status: "Interview Scheduled"
+          status: "Interview Scheduled",
         },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+      const response = await axios.get(
+        "https://api.vidhema.com/getAllJobProfiles"
+      );
       onUpdate(response.data);
       setScheduleInterview(null);
       setInterviewDate("");
@@ -150,13 +176,15 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
   const closeJob = async (id: string) => {
     try {
       await axios.put(
-        `http://localhost:3006/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         { status: "Closed" },
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } }
       );
 
       // Fetch the latest profiles from the backend
-      const response = await axios.get("http://localhost:3006/getAllJobProfiles");
+      const response = await axios.get(
+        "https://api.vidhema.com/getAllJobProfiles"
+      );
       onUpdate(response.data); // Update UI with fresh data
       console.log("Job status updated to Closed");
     } catch (error) {
@@ -172,8 +200,12 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-xl font-semibold text-gray-900">{profile.title}</h3>
-                  <Badge className={getStatusColor(profile.status)}>{profile.status}</Badge>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {profile.title}
+                  </h3>
+                  <Badge className={getStatusColor(profile.status)}>
+                    {profile.status}
+                  </Badge>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
@@ -214,13 +246,19 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span>{new Date(profile.actionDetails.followUpDate).toLocaleDateString()}</span>
+                          <span>
+                            {new Date(
+                              profile.actionDetails.followUpDate
+                            ).toLocaleDateString()}
+                          </span>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => {
                               setEditingFollowup(profile._id);
-                              setNewFollowupDate(profile.actionDetails.followUpDate);
+                              setNewFollowupDate(
+                                profile.actionDetails.followUpDate
+                              );
                             }}
                             className="h-6 w-6 p-0"
                           >
@@ -233,10 +271,16 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                 </div>
 
                 <div className="mb-4">
-                  <p className="font-medium text-gray-900 mb-1">Required Skills</p>
+                  <p className="font-medium text-gray-900 mb-1">
+                    Required Skills
+                  </p>
                   <div className="flex flex-wrap gap-1">
                     {profile.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {skill}
                       </Badge>
                     ))}
@@ -246,19 +290,29 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="font-medium text-gray-900">Profiles Sent</p>
-                    <p className="text-blue-600 font-semibold">{profile?.actionDetails.markAsSend === true ? "Yes" : "No"}</p>
+                    <p className="text-blue-600 font-semibold">
+                      {profile?.actionDetails.markAsSend === true
+                        ? "Yes"
+                        : "No"}
+                    </p>
                   </div>
                   {profile.actionDetails.candidateName && (
                     <div>
                       <p className="font-medium text-gray-900">Candidate</p>
-                      <p className="text-green-600 font-semibold">{profile.actionDetails.candidateName}</p>
+                      <p className="text-green-600 font-semibold">
+                        {profile.actionDetails.candidateName}
+                      </p>
                     </div>
                   )}
                   {profile.interviewActionDetails.interviewDateTime && (
                     <div>
-                      <p className="font-medium text-gray-900">Interview Date</p>
+                      <p className="font-medium text-gray-900">
+                        Interview Date
+                      </p>
                       <p className="text-green-600 font-semibold">
-                        {new Date(profile.interviewActionDetails.interviewDateTime).toLocaleDateString()}
+                        {new Date(
+                          profile.interviewActionDetails.interviewDateTime
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                   )}
@@ -267,7 +321,12 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
 
               <div className="flex flex-col gap-2 ml-6">
                 <div className="flex gap-2">
-                  <Dialog open={sendProfileDialog === profile._id} onOpenChange={open => setSendProfileDialog(open ? profile._id : null)}>
+                  <Dialog
+                    open={sendProfileDialog === profile._id}
+                    onOpenChange={(open) =>
+                      setSendProfileDialog(open ? profile._id : null)
+                    }
+                  >
                     <DialogTrigger asChild>
                       <Button
                         size="sm"
@@ -291,7 +350,9 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                           <Label>Candidate Name</Label>
                           <Input
                             value={selectedCandidate}
-                            onChange={(e) => setSelectedCandidate(e.target.value)}
+                            onChange={(e) =>
+                              setSelectedCandidate(e.target.value)
+                            }
                             placeholder="Enter candidate name"
                           />
                         </div>
@@ -316,10 +377,14 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                   {profile.status === "Profile Sent" && (
                     <Dialog
                       open={scheduleInterview === profile._id}
-                      onOpenChange={open => setScheduleInterview(open ? profile._id : null)}
+                      onOpenChange={(open) =>
+                        setScheduleInterview(open ? profile._id : null)
+                      }
                     >
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline"
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => {
                             setScheduleInterview(profile._id);
                             setInterviewDate("");
@@ -343,7 +408,9 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
                             />
                           </div>
                           <Button
-                            onClick={() => scheduleInterviewForProfile(profile._id)}
+                            onClick={() =>
+                              scheduleInterviewForProfile(profile._id)
+                            }
                             className="w-full"
                           >
                             Schedule Interview
@@ -380,7 +447,9 @@ export const JobProfileList = ({ profiles, onUpdate, onEdit }: JobProfileListPro
             {profile.description && (
               <div className="border-t pt-4">
                 <p className="font-medium text-gray-900 mb-2">Description</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{profile.description}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {profile.description}
+                </p>
               </div>
             )}
           </CardContent>

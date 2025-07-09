@@ -4,9 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Upload, Briefcase, User, Calendar, DollarSign, Code, FileText, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  Briefcase,
+  User,
+  Calendar,
+  DollarSign,
+  Code,
+  FileText,
+  Users,
+} from "lucide-react";
 
 interface JobProfileFormProps {
   onSave: () => void;
@@ -14,8 +30,12 @@ interface JobProfileFormProps {
   editData?: any;
 }
 
-export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormProps) => {
-  const [clients, setClients] = useState<{ _id: string, name: string }[]>([]);
+export const JobProfileForm = ({
+  onSave,
+  onCancel,
+  editData,
+}: JobProfileFormProps) => {
+  const [clients, setClients] = useState<{ _id: string; name: string }[]>([]);
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -29,30 +49,36 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
     contactPersonName: editData?.contactPersonName || "",
     followUpDate: formatDate(editData?.actionDetails?.followUpDate || ""),
     clientBudget: editData?.clientBudget || "",
-    skills: editData?.skills ? (Array.isArray(editData.skills) ? editData.skills.join(", ") : editData.skills) : "",
+    skills: editData?.skills
+      ? Array.isArray(editData.skills)
+        ? editData.skills.join(", ")
+        : editData.skills
+      : "",
     description: editData?.description || "",
     status: editData ? editData.status : "Active",
     jdFile: editData?.jd || "",
-    candidateName: editData?.actionDetails?.candidateName || ""
+    candidateName: editData?.actionDetails?.candidateName || "",
   });
 
   useEffect(() => {
     const getAllClients = async () => {
       try {
-        const response = await axios.get('http://localhost:3006/clients')
-        setClients(response.data)
+        const response = await axios.get("https://api.vidhema.com/clients");
+        setClients(response.data);
         console.log(response.data, "client data");
       } catch (error) {
-        console.log('error', error)
+        console.log("error", error);
       }
-    }
-    getAllClients()
-  }, [])
+    };
+    getAllClients();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const selectedClient = clients.find(client => client.name === formData.clientName);
+    const selectedClient = clients.find(
+      (client) => client.name === formData.clientName
+    );
     if (!selectedClient) {
       console.log("Please select a client.");
       return;
@@ -76,9 +102,15 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
 
     try {
       if (editData) {
-        const response = await axios.put(`http://localhost:3006/updateJobProfile/${editData._id}`, payload);
+        const response = await axios.put(
+          `https://api.vidhema.com/updateJobProfile/${editData._id}`,
+          payload
+        );
       } else {
-        const response = await axios.post("http://localhost:3006/createJobProfile", payload);
+        const response = await axios.post(
+          "https://api.vidhema.com/createJobProfile",
+          payload
+        );
       }
       onSave();
     } catch (error) {
@@ -88,13 +120,13 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData(prev => ({ ...prev, jdFile: file.name }));
+      setFormData((prev) => ({ ...prev, jdFile: file.name }));
     }
   };
 
@@ -114,7 +146,9 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               {editData ? "Edit Job Profile" : "Create New Job Profile"}
             </h1>
-            <p className="text-gray-600 mt-1">Define job requirements and track candidate progress</p>
+            <p className="text-gray-600 mt-1">
+              Define job requirements and track candidate progress
+            </p>
           </div>
         </div>
 
@@ -131,11 +165,16 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
               <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Briefcase className="h-5 w-5 text-purple-600" />
-                  <h3 className="text-lg font-semibold text-gray-800">Job Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Job Information
+                  </h3>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Label
+                    htmlFor="title"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
                     <Briefcase className="h-4 w-4 text-purple-600" />
                     Job Title
                   </Label>
@@ -151,16 +190,24 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="clientName" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="clientName"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <Users className="h-4 w-4 text-blue-600" />
                       Client Name
                     </Label>
                     <Select
                       value={formData.clientName}
-                      onValueChange={(value) => handleChange("clientName", value)}
+                      onValueChange={(value) =>
+                        handleChange("clientName", value)
+                      }
                       required
                     >
-                      <SelectTrigger id="clientName" className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
+                      <SelectTrigger
+                        id="clientName"
+                        className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                      >
                         <SelectValue placeholder="Select a client" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200 shadow-lg">
@@ -174,14 +221,19 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="contactPersonName" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="contactPersonName"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <User className="h-4 w-4 text-blue-600" />
                       Contact Person
                     </Label>
                     <Input
                       id="contactPersonName"
                       value={formData.contactPersonName}
-                      onChange={(e) => handleChange("contactPersonName", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("contactPersonName", e.target.value)
+                      }
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="Primary contact person"
                       required
@@ -190,14 +242,19 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="candidateName" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Label
+                    htmlFor="candidateName"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
                     <User className="h-4 w-4 text-green-600" />
                     Candidate Name
                   </Label>
                   <Input
                     id="candidateName"
                     value={formData.candidateName}
-                    onChange={(e) => handleChange("candidateName", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("candidateName", e.target.value)
+                    }
                     placeholder="Enter candidate name (if selected)"
                     className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
                   />
@@ -208,12 +265,17 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
               <div className="space-y-6 pt-6 border-t border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <DollarSign className="h-5 w-5 text-green-600" />
-                  <h3 className="text-lg font-semibold text-gray-800">Job Requirements</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Job Requirements
+                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="followUpDate" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="followUpDate"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <Calendar className="h-4 w-4 text-orange-600" />
                       Follow-up Date
                     </Label>
@@ -221,14 +283,19 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                       id="followUpDate"
                       type="date"
                       value={formData.followUpDate}
-                      onChange={(e) => handleChange("followUpDate", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("followUpDate", e.target.value)
+                      }
                       className="h-12 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="clientBudget" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="clientBudget"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <DollarSign className="h-4 w-4 text-green-600" />
                       Budget Range
                     </Label>
@@ -236,7 +303,9 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                       id="clientBudget"
                       type="number"
                       value={formData.clientBudget}
-                      onChange={(e) => handleChange("clientBudget", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("clientBudget", e.target.value)
+                      }
                       placeholder="e.g., $80,000 - $100,000"
                       className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
                       required
@@ -245,7 +314,10 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="skills" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Label
+                    htmlFor="skills"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
                     <Code className="h-4 w-4 text-indigo-600" />
                     Required Skills (comma separated)
                   </Label>
@@ -260,14 +332,19 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Label
+                    htmlFor="description"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
                     <FileText className="h-4 w-4 text-gray-600" />
                     Job Description
                   </Label>
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => handleChange("description", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("description", e.target.value)
+                    }
                     rows={4}
                     placeholder="Detailed job description, responsibilities, and requirements..."
                     className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 rounded-lg resize-none"
@@ -280,28 +357,45 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
               <div className="space-y-6 pt-6 border-t border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <Upload className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-800">Status & Documentation</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Status & Documentation
+                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {editData ? (
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-gray-700">Job Status</Label>
-                      <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
-                        <SelectTrigger id="status" className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
+                      <Label className="text-sm font-semibold text-gray-700">
+                        Job Status
+                      </Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) => handleChange("status", value)}
+                      >
+                        <SelectTrigger
+                          id="status"
+                          className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="Active">🟢 Active</SelectItem>
-                          <SelectItem value="Profile Sent">📤 Profile Sent</SelectItem>
-                          <SelectItem value="Interview Scheduled">📅 Interview Scheduled</SelectItem>
+                          <SelectItem value="Profile Sent">
+                            📤 Profile Sent
+                          </SelectItem>
+                          <SelectItem value="Interview Scheduled">
+                            📅 Interview Scheduled
+                          </SelectItem>
                           <SelectItem value="On Hold">⏸️ On Hold</SelectItem>
                           <SelectItem value="Closed">✅ Closed</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>) : (
+                    </div>
+                  ) : (
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-gray-700">Job Status</Label>
+                      <Label className="text-sm font-semibold text-gray-700">
+                        Job Status
+                      </Label>
                       <Input
                         id="title"
                         value="Active"
@@ -309,10 +403,12 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                         className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-lg"
                       />
                     </div>
-                  )
-                  }
+                  )}
                   <div className="space-y-2">
-                    <Label htmlFor="jdFile" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Label
+                      htmlFor="jdFile"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
                       <Upload className="h-4 w-4 text-blue-600" />
                       Job Description File
                     </Label>
@@ -327,7 +423,9 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => document.getElementById('jdFile')?.click()}
+                        onClick={() =>
+                          document.getElementById("jdFile")?.click()
+                        }
                         className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 rounded-lg"
                       >
                         <Upload className="h-4 w-4 mr-2" />
@@ -359,6 +457,6 @@ export const JobProfileForm = ({ onSave, onCancel, editData }: JobProfileFormPro
           </CardContent>
         </Card>
       </div>
-    </div >
+    </div>
   );
 };
