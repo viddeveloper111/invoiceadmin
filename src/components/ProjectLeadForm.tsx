@@ -247,7 +247,7 @@ export const ProjectLeadForm = ({
     try {
       if (editData) {
         const response = await axios.put(
-          `http://localhost:3006/projects/${editData._id}`,
+          `https://api.vidhema.com/projects/${editData._id}`,
           payload
         );
         console.log("This is response data of edit", response.data);
@@ -257,7 +257,7 @@ export const ProjectLeadForm = ({
         });
       } else {
         const response = await axios.post(
-          `http://localhost:3006/projects`,
+          `https://api.vidhema.com/projects`,
           payload
         );
         toast({

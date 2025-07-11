@@ -115,14 +115,14 @@ export const ProjectLeadList = ({
   const updateFollowupDate = async (id: string) => {
     try {
       await axios.put(
-        `http://localhost:3006/projects/${id}`,
+        `https://api.vidhema.com/projects/${id}`,
         {
           "actionDetails.followUpDate": newFollowupDate,
         },
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`http://localhost:3006/projects`);
+      const response = await axios.get(`https://api.vidhema.com/projects`);
 
       onUpdate(response.data);
       setEditingFollowup(null);
@@ -156,7 +156,7 @@ export const ProjectLeadList = ({
   //   }
   //   try {
   //     await axios.put(
-  //       `http://localhost:3006/projects/${id}`,
+  //       `https://api.vidhema.com/projects/${id}`,
   //       {
   //         status: "Lead Sent",
   //         "actionDetails.markAsSend": true,
@@ -166,7 +166,7 @@ export const ProjectLeadList = ({
   //       { headers: { "Content-Type": "application/json" } }
   //     );
   //     // Fetch the latest profiles from the backend
-  //     const response = await axios.get(`http://localhost:3006/projects`);
+  //     const response = await axios.get(`https://api.vidhema.com/projects`);
 
   //     onUpdate(response.data);
   //     setSendProfileDialog(null);
@@ -203,7 +203,7 @@ export const ProjectLeadList = ({
     try {
       // Let's say you already have the existing project data
       const existingProject = await axios.get(
-        `http://localhost:3006/projects/${id}`
+        `https://api.vidhema.com/projects/${id}`
       );
 
       const existingTeamName =
@@ -220,20 +220,22 @@ export const ProjectLeadList = ({
       };
 
       await axios.put(
-        `http://localhost:3006/projects/${id}`,
+        `https://api.vidhema.com/projects/${id}`,
 
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
       console.log("proposal", proposalDescription);
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`http://localhost:3006/projects`);
+      const response = await axios.get(`https://api.vidhema.com/projects`);
 
       onUpdate(response.data);
       setSendProfileDialog(null);
       setProposalDescription("");
       setSendDateTime("");
-      console.log("This is sendprofile to client function data in project list ", response.data
+      console.log(
+        "This is sendprofile to client function data in project list ",
+        response.data
       );
       toast({
         title: "Proposal Sent",
@@ -259,7 +261,7 @@ export const ProjectLeadList = ({
     }
     try {
       await axios.put(
-        `http://localhost:3006/projects/${id}`,
+        `https://api.vidhema.com/projects/${id}`,
         {
           "interviewActionDetails.interviewDateTime": interviewDate,
           "interviewActionDetails.proceedToInterview": true,
@@ -268,7 +270,7 @@ export const ProjectLeadList = ({
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`http://localhost:3006/projects`);
+      const response = await axios.get(`https://api.vidhema.com/projects`);
       onUpdate(response.data);
       setScheduleInterview(null);
       setInterviewDate("");
@@ -293,13 +295,13 @@ export const ProjectLeadList = ({
   const closeProject = async (id: string) => {
     try {
       await axios.put(
-        `http://localhost:3006/projects/${id}`,
+        `https://api.vidhema.com/projects/${id}`,
         { status: "Closed" },
         { headers: { "Content-Type": "application/json" } }
       );
 
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`http://localhost:3006/projects`);
+      const response = await axios.get(`https://api.vidhema.com/projects`);
       onUpdate(response.data); // Update UI with fresh data
       console.log(
         "this is closeproject in list page of project",
@@ -638,9 +640,7 @@ export const ProjectLeadList = ({
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>
-                            Send Proposal  Description
-                          </DialogTitle>
+                          <DialogTitle>Send Proposal Description</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <div>
@@ -767,13 +767,15 @@ export const ProjectLeadList = ({
 
             {project.description && (
               <div className="border-t pt-4">
-                <p className="font-medium text-gray-900 mb-2">Project Description</p>
+                <p className="font-medium text-gray-900 mb-2">
+                  Project Description
+                </p>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   {project.description}
                 </p>
               </div>
             )}
-    <br/>
+            <br />
             {/* propsal descripition */}
             {project.proposalDescription && (
               <div className="border-t pt-4">

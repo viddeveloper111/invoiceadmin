@@ -54,7 +54,7 @@ interface ProjectProfile {
   clientBudget: number;
   status: string;
   jd?: string;
-  proposalDescription:string,
+  proposalDescription: string;
 
   actionDetails?: ActionDetails;
   projectActionDetails?: ProjectActionDetails;
@@ -76,7 +76,7 @@ export const ProjectLeads = () => {
   const fetchProjectProfiles = async () => {
     try {
       await axios
-        .get("http://localhost:3006/projects")
+        .get("https://api.vidhema.com/projects")
         .then((response) => {
           setProjectProfiles(response.data);
           console.log(
@@ -98,7 +98,7 @@ export const ProjectLeads = () => {
   console.log("Fetching all project ", projectProfiles);
   const addProjectProfile = async () => {
     try {
-      const response = await axios.get("http://localhost:3006/projects");
+      const response = await axios.get("https://api.vidhema.com/projects");
       setProjectProfiles(response.data);
       console.log(
         "This is project add ProjectProfile  data through projectlead page",
@@ -139,7 +139,7 @@ export const ProjectLeads = () => {
   const scheduledInterviews = projectProfiles.filter(
     (profile) => profile.status === "Meeting Scheduled"
   ).length;
- 
+
   // Find the profile to edit if on /project/edit/:id
   let editData = null;
   if (location.pathname.startsWith("/projects/edit") && params.id) {
