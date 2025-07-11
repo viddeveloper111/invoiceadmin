@@ -85,21 +85,32 @@ export const ClientManagement = () => {
 
   const [clients, setClients] = useState<Client[]>([]);
 
-  const addClient = (clientData: any) => {
-    const newClient: Client = {
-      ...clientData,
-      // id: clients.length + 1,
-      conversations: 0,
-      chatMessages: [],
-      followups: [],
-      totalAmount: 0,
-      paidAmount: 0,
-    };
+//   const fetchClients = async () => {
+//   const response = await axios.get(`${baseURL}/clients`);
+//   const normalized = response.data.map((c: any) => ({
+//     ...c,
+//     id: c._id,
+//   }));
+//   setClients(normalized);
+// };
+
+
+  const addClient = (newClient: Client) => {
+    // const newClient: Client = {
+    //   ...clientData,
+    //   // id: clients.length + 1,
+    //   conversations: 0,
+    //   chatMessages: [],
+    //   followups: [],
+    //   totalAmount: 0,
+    //   paidAmount: 0,
+    // };
     // setClients([...clients, newClient]);
 
     // at the top of the list
     setClients((prevClients) => [newClient, ...prevClients]);
     setShowForm(false);
+     fetchData(); // re-fetch clients after adding
   };
 
   const filteredClients = clients.filter(
@@ -126,8 +137,7 @@ export const ClientManagement = () => {
 
       const baseURL = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    const fetchData = async () => {
+       const fetchData = async () => {
       try {
         const response = await axios.get(`${baseURL}/clients`);
         const backendClients = response.data;
@@ -145,6 +155,9 @@ export const ClientManagement = () => {
       }
     };
 
+  useEffect(() => {
+   
+
     fetchData();
     // printallid()
   }, []);
@@ -155,6 +168,9 @@ export const ClientManagement = () => {
   //     console.log('this is each client country code',clinet.country)
   //   })
   // }
+
+ 
+
 
   return (
     <Routes>
@@ -268,7 +284,7 @@ export const ClientManagement = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <ClientList clients={filteredClients} onUpdate={setClients} />
+                  <ClientList clients={filteredClients} onUpdate={setClients} refetchClients={fetchData} />
                 </CardContent>
               </Card>
             </>

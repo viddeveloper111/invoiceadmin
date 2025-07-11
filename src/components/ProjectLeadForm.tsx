@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IndianRupee } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/use-toast";
+
 import {
   Select,
   SelectContent,
@@ -25,17 +28,17 @@ import {
   Users,
 } from "lucide-react";
 
-interface JobProfileFormProps {
+interface ProjectProfileFormProps {
   onSave: () => void;
   onCancel: () => void;
   editData?: any;
 }
 
-export const JobProfileForm = ({
+export const ProjectLeadForm = ({
   onSave,
   onCancel,
   editData,
-}: JobProfileFormProps) => {
+}: ProjectProfileFormProps) => {
   const [clients, setClients] = useState<{ _id: string; name: string }[]>([]);
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "";
@@ -50,22 +53,85 @@ export const JobProfileForm = ({
     contactPersonName: editData?.contactPersonName || "",
     followUpDate: formatDate(editData?.actionDetails?.followUpDate || ""),
     clientBudget: editData?.clientBudget || "",
-    skills: editData?.skills
-      ? Array.isArray(editData.skills)
-        ? editData.skills.join(", ")
-        : editData.skills
-      : "",
+    // skills: editData?.skills
+    //   ? Array.isArray(editData.skills)
+    //     ? editData.skills.join(", ")
+    //     : editData.skills
+    //   : "",
+    // new ly so that skills should be at down
+    skills: editData?.skills ?? [],
+
     description: editData?.description || "",
-    status: editData ? editData.status : "Active",
+    // status: editData ? editData.status : "Active",
+    status:
+      editData && typeof editData.status === "string"
+        ? editData.status
+        : "Active",
+
     jdFile: editData?.jd || "",
-    candidateName: editData?.actionDetails?.candidateName || "",
+    // teamName: editData?.actionDetails?.teamName || "",
+
+    // new version of teamName it is array of string on enter add and x remove
+    teamName: editData?.actionDetails?.teamName
+      ? Array.isArray(editData.actionDetails.teamName)
+        ? editData.actionDetails.teamName
+        : [editData.actionDetails.teamName]
+      : [],
   });
+
+  // this is for the teamName enter and delte
+  const handleTeamKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const input = e.currentTarget.value.trim();
+      if (input && !formData.teamName.includes(input)) {
+        setFormData((prev) => ({
+          ...prev,
+          teamName: [...prev.teamName, input],
+        }));
+        e.currentTarget.value = "";
+      }
+    }
+  };
+
+  const removeTeam = (teamToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      teamName: prev.teamName.filter((team) => team !== teamToRemove),
+    }));
+  };
+
+  // this for the skill enter and delet
+  const handleSkillKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const input = e.currentTarget.value.trim();
+      if (input && !formData.skills.includes(input)) {
+        setFormData((prev) => ({
+          ...prev,
+          skills: [...prev.skills, input],
+        }));
+        e.currentTarget.value = "";
+      }
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+    }));
+  };
 
   useEffect(() => {
     const getAllClients = async () => {
       try {
         const response = await axios.get("https://api.vidhema.com/clients");
         setClients(response.data);
+        console.log(
+          "This is project getting  data through projectlead form page",
+          response.data
+        );
         console.log(response.data, "client data");
       } catch (error) {
         console.log("error", error);
@@ -86,6 +152,60 @@ export const JobProfileForm = ({
     );
     if (!selectedClient) {
       console.log("Please select a client.");
+      toast({
+        title: " Enter the Client",
+        description: "The Client has not been selected.",
+      });
+      return;
+    }
+
+    // Validate title
+    if (!formData.title.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Project title is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate contact person
+    if (!formData.contactPersonName.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Contact person name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate follow-up date
+    if (!formData.followUpDate) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Follow-up date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate client budget
+    if (!formData.clientBudget || isNaN(Number(formData.clientBudget))) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "A valid client budget is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate description
+    if (!formData.description.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Project description is required.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -93,34 +213,73 @@ export const JobProfileForm = ({
       clientId: selectedClient._id,
       title: formData.title,
       contactPersonName: formData.contactPersonName,
-      skills: formData.skills.split(",").map((skill: string) => skill.trim()),
+      // skills: formData.skills.split(",").map((skill: string) => skill.trim()),
+      // enter based skill set
+      skills: formData.skills,
+
       description: formData.description,
       // clientBudget: Number(formData.clientBudget.replace(/[^0-9.-]+/g, "")),
       clientBudget: Number(formData.clientBudget),
       status: formData.status,
       jd: formData.jdFile,
       actionDetails: {
-        candidateName: formData.candidateName,
+        teamName: formData.teamName,
         followUpDate: formData.followUpDate,
       },
+      proposalDescription: "", // ✅ <-- add this explicitly
     };
+
+    // new
+    // Logging payload fields with their types:
+    console.log("Logging payload with types:", payload);
+    for (const [key, value] of Object.entries(payload)) {
+      if (typeof value === "object" && value !== null) {
+        console.log(`${key}:`, value, `(type: ${typeof value})`);
+        // If nested object, log its keys too
+        for (const [subKey, subValue] of Object.entries(value)) {
+          console.log(`  ${subKey}:`, subValue, `(type: ${typeof subValue})`);
+        }
+      } else {
+        console.log(`${key}:`, value, `(type: ${typeof value})`);
+      }
+    }
 
     try {
       if (editData) {
         const response = await axios.put(
-          `${baseURL}/updateJobProfile/${editData._id}`,
+          `http://localhost:3006/projects/${editData._id}`,
           payload
         );
+        console.log("This is response data of edit", response.data);
+        toast({
+          title: "✅ Project Updated",
+          description: "The project  was updated successfully.",
+        });
       } else {
         const response = await axios.post(
-          `${baseURL}/createJobProfile`,
+          `http://localhost:3006/projects`,
           payload
         );
+        toast({
+          title: "✅ Project Created",
+          description: "The new project  has been created.",
+        });
+
+        console.log("This is response data", response.data);
       }
+      console.log("Payload", payload);
+
       onSave();
     } catch (error) {
-      console.log("Failed to save job profile");
+      console.log("Failed to save project  profile");
       console.error(error);
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to save the project . Please try again.",
+      });
     }
   };
 
@@ -145,14 +304,14 @@ export const JobProfileForm = ({
             className="hover:bg-white/60 backdrop-blur-sm border border-gray-200"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Job Profiles
+            Back to Projects
           </Button>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              {editData ? "Edit Job Profile" : "Create New Job Profile"}
+              {editData ? "Edit Project Lead" : "Create New Lead"}
             </h1>
             <p className="text-gray-600 mt-1">
-              Define job requirements and track candidate progress
+              Define Project requirements and track Project Progress
             </p>
           </div>
         </div>
@@ -161,17 +320,17 @@ export const JobProfileForm = ({
           <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
             <CardTitle className="text-2xl font-semibold flex items-center gap-2">
               <Briefcase className="h-6 w-6" />
-              Job Profile Details
+              Project Details
             </CardTitle>
           </CardHeader>
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Job Information Section */}
+              {/* Project Information Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Briefcase className="h-5 w-5 text-purple-600" />
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Job Information
+                    Project Information
                   </h3>
                 </div>
 
@@ -181,15 +340,14 @@ export const JobProfileForm = ({
                     className="text-sm font-semibold text-gray-700 flex items-center gap-2"
                   >
                     <Briefcase className="h-4 w-4 text-purple-600" />
-                    Job Title
+                    Project Title
                   </Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => handleChange("title", e.target.value)}
-                    placeholder="e.g., Senior React Developer"
+                    placeholder="e.g., Food Delivery, Ecommerce"
                     className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-lg"
-                    required
                   />
                 </div>
 
@@ -207,7 +365,6 @@ export const JobProfileForm = ({
                       onValueChange={(value) =>
                         handleChange("clientName", value)
                       }
-                      required
                     >
                       <SelectTrigger
                         id="clientName"
@@ -241,28 +398,62 @@ export const JobProfileForm = ({
                       }
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="Primary contact person"
-                      required
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* old team section */}
+
+                {/* <div className="space-y-2">
                   <Label
-                    htmlFor="candidateName"
+                    htmlFor="teamName"
                     className="text-sm font-semibold text-gray-700 flex items-center gap-2"
                   >
                     <User className="h-4 w-4 text-green-600" />
-                    Candidate Name
+                    Team
                   </Label>
                   <Input
-                    id="candidateName"
-                    value={formData.candidateName}
-                    onChange={(e) =>
-                      handleChange("candidateName", e.target.value)
-                    }
-                    placeholder="Enter candidate name (if selected)"
+                    id="teamName"
+                    value={formData.teamName}
+                    onChange={(e) => handleChange("teamName", e.target.value)}
+                    placeholder="Enter Team name (if selected)"
                     className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
                   />
+                </div> */}
+
+                {/* new Team Section  */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="teamName"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
+                    <User className="h-4 w-4 text-green-600" />
+                    Team (Press Enter to Add)
+                  </Label>
+                  <Input
+                    id="teamName"
+                    placeholder="Enter team name and press Enter"
+                    onKeyDown={handleTeamKeyDown}
+                    className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
+                  />
+
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.teamName.map((team, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
+                      >
+                        {team}
+                        <button
+                          type="button"
+                          onClick={() => removeTeam(team)}
+                          className="ml-2 text-green-500 hover:text-red-500 focus:outline-none"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -271,7 +462,7 @@ export const JobProfileForm = ({
                 <div className="flex items-center gap-2 mb-4">
                   <IndianRupee className="h-5 w-5 text-green-600" />
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Job Requirements
+                    Project Requirements
                   </h3>
                 </div>
 
@@ -292,7 +483,6 @@ export const JobProfileForm = ({
                         handleChange("followUpDate", e.target.value)
                       }
                       className="h-12 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg"
-                      required
                     />
                   </div>
 
@@ -302,7 +492,7 @@ export const JobProfileForm = ({
                       className="text-sm font-semibold text-gray-700 flex items-center gap-2"
                     >
                       <IndianRupee className="h-4 w-4 text-green-600" />
-                      Budget 
+                      Budget
                     </Label>
                     <Input
                       id="clientBudget"
@@ -313,12 +503,11 @@ export const JobProfileForm = ({
                       }
                       placeholder="e.g. Rs 80,000"
                       className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                      required
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label
                     htmlFor="skills"
                     className="text-sm font-semibold text-gray-700 flex items-center gap-2"
@@ -334,6 +523,44 @@ export const JobProfileForm = ({
                     className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
                     required
                   />
+                </div> */}
+
+                {/* newly added skill set on the basis of the enter */}
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="skills"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
+                    <Code className="h-4 w-4 text-indigo-600" />
+                    Required Skills (Press Enter to Add)
+                  </Label>
+
+                  <Input
+                    id="skills"
+                    placeholder="e.g., React, TypeScript, AWS"
+                    onKeyDown={handleSkillKeyDown}
+                    className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                  />
+
+                  {/* Skills Tags Display */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.skills.map((skill, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeSkill(skill)}
+                          className="ml-2 text-indigo-500 hover:text-red-500 focus:outline-none"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -342,7 +569,7 @@ export const JobProfileForm = ({
                     className="text-sm font-semibold text-gray-700 flex items-center gap-2"
                   >
                     <FileText className="h-4 w-4 text-gray-600" />
-                    Job Description
+                    Project Description
                   </Label>
                   <Textarea
                     id="description"
@@ -351,9 +578,8 @@ export const JobProfileForm = ({
                       handleChange("description", e.target.value)
                     }
                     rows={4}
-                    placeholder="Detailed job description, responsibilities, and requirements..."
+                    placeholder="Detailed Project description, responsibilities, and requirements..."
                     className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 rounded-lg resize-none"
-                    required
                   />
                 </div>
               </div>
@@ -371,7 +597,7 @@ export const JobProfileForm = ({
                   {editData ? (
                     <div className="space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">
-                        Job Status
+                        Project Status
                       </Label>
                       <Select
                         value={formData.status}
@@ -385,11 +611,11 @@ export const JobProfileForm = ({
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="Active">🟢 Active</SelectItem>
-                          <SelectItem value="Profile Sent">
-                            📤 Profile Sent
+                          <SelectItem value="Lead Sent">
+                            📤 Lead Sent
                           </SelectItem>
-                          <SelectItem value="Interview Scheduled">
-                            📅 Interview Scheduled
+                          <SelectItem value="Meeting Scheduled">
+                            📅 Meeting Scheduled
                           </SelectItem>
                           <SelectItem value="On Hold">⏸️ On Hold</SelectItem>
                           <SelectItem value="Closed">✅ Closed</SelectItem>
@@ -399,7 +625,7 @@ export const JobProfileForm = ({
                   ) : (
                     <div className="space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">
-                        Job Status
+                        Project Status
                       </Label>
                       <Input
                         id="title"
@@ -415,7 +641,7 @@ export const JobProfileForm = ({
                       className="text-sm font-semibold text-gray-700 flex items-center gap-2"
                     >
                       <Upload className="h-4 w-4 text-blue-600" />
-                      Job Description File
+                      Project Description
                     </Label>
                     <div className="relative">
                       <Input
@@ -434,7 +660,8 @@ export const JobProfileForm = ({
                         className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 rounded-lg"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        {formData.jdFile || "Upload JD File (PDF/DOC)"}
+                        {formData.jdFile ||
+                          "Upload Project Description (PDF/DOC)"}
                       </Button>
                     </div>
                   </div>
@@ -447,7 +674,7 @@ export const JobProfileForm = ({
                   type="submit"
                   className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  💾 {editData ? "Update Job Profile" : "Create Job Profile"}
+                  💾 {editData ? "Update Project " : "Create Project "}
                 </Button>
                 <Button
                   type="button"

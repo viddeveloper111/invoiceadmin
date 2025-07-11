@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { IndianRupee } from "lucide-react";
 
 interface ClientFormProps {
   onSave: (data: any) => void;
@@ -53,26 +54,61 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
     e.preventDefault();
     // Convert status string to boolean for backend
     // const statusBool = formData.status === "Active" ? true : false;
-    onSave({
-      ...formData,
-      // status: formData.status === "Active", // convert string to boolean
-      lastFollowup: new Date().toISOString().split("T")[0],
-    });
 
+    // this old day
+    // onSave({
+    //   ...formData,
+    //   // status: formData.status === "Active", // convert string to boolean
+    //   lastFollowup: new Date().toISOString().split("T")[0],
+    // });
+
+    // const payload = {
+    //   ...formData,
+    //   lastFollowup: new Date().toISOString().split("T")[0],
+    //   // status: formData.status === "Active"
+    // };
+    // console.log("📤 Sending payload:", payload);
+
+    // try {
+    //   const saveData = await axios.post(`${baseURL}/clients`, payload, {
+    //     headers: { "Content-Type": "application/json" },
+    //   });
+
+    //   console.log("This is the client form data", saveData.data);
+
+    //   onCancel();
+
+    // this new night 9/7/25
     const payload = {
       ...formData,
       lastFollowup: new Date().toISOString().split("T")[0],
-      // status: formData.status === "Active"
     };
+
     console.log("📤 Sending payload:", payload);
 
     try {
-      const saveData = await axios.post(`${baseURL}/clients`, payload, {
+      // ✅ Send POST request to backend
+      const response = await axios.post(`${baseURL}/clients`, payload, {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("This is the client form data", saveData.data);
+      const savedClientFromDb = response.data;
 
+      // ✅ Normalize client and attach frontend defaults
+      const newClient = {
+        ...savedClientFromDb,
+        id: savedClientFromDb._id, // normalize _id
+        conversations: 0,
+        chatMessages: [],
+        followups: [],
+        totalAmount: 0,
+        paidAmount: 0,
+      };
+
+      // ✅ Add to frontend list with real DB id
+      onSave(newClient);
+
+      // ✅ Navigate back or close form
       onCancel();
     } catch (error) {
       console.log("there is error in submitting the data", error);
@@ -250,6 +286,27 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* <div className="space-y-2">
+                    <Label
+                      htmlFor="clientBudget"
+                      className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                    >
+                      <IndianRupee className="h-4 w-4 text-green-600" />
+                      Budget
+                    </Label>
+                    <Input
+                      id="clientBudget"
+                      type="number"
+                      value=""
+                      onChange={(e) =>
+                        handleChange("clientBudget", e.target.value)
+                      }
+                      placeholder="e.g. Rs 80,000"
+                      className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
+                      required
+                    />
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label

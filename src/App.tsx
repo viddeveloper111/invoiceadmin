@@ -14,6 +14,8 @@ import { JobProfiles } from "./components/JobProfiles";
 import { Analytics } from "./components/Analytics";
 import { Dashboard } from "./components/Dashboard";
 import { ProjectLeads } from "./components/ProjectLeads";
+import { ProjectLeadForm } from "./components/ProjectLeadForm";
+import { ProjectLeadList } from "./components/ProjectLeadsList";
 // import {ProtectedRoute} from '../src/Routes/ProtectedRoute'
 
 const queryClient = new QueryClient();
@@ -46,7 +48,11 @@ const App = () => {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="clients/*" element={<ClientManagement />} />
-                <Route path="projects/*" element={<ProjectLeads/>} />
+                <Route path="projects" element={<ProjectLeads />}>
+                  <Route index element={<ProjectLeads />} />
+                  <Route path="create" element={<ProjectLeadForm onSave={() => { }} onCancel={() => { }} editData={null} />} />
+                  <Route path="edit/:id" element={<ProjectLeadForm onSave={() => { }} onCancel={() => { }} editData={null} />} />
+                </Route>
                 <Route path="jobs" element={<JobProfiles />}>
                   <Route index element={<JobProfiles />} />
                   <Route path="create" element={<JobProfileForm onSave={() => { }} onCancel={() => { }} editData={null} />} />

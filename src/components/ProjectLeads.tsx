@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Filter, Briefcase, Clock, Users } from "lucide-react";
-import { JobProfileForm } from "./JobProfileForm";
-import { JobProfileList } from "./JobProfileList";
+
 import {
   Select,
   SelectContent,
@@ -14,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import axios from "axios";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { ProjectLeadForm } from "./ProjectLeadForm";
+import { ProjectLeadList } from "./ProjectLeadsList";
 
 interface PopulatedClientDetails {
   _id: string;
@@ -29,19 +30,21 @@ interface PopulatedClientDetails {
 interface ActionDetails {
   inboxType?: "employee" | "candidate";
   employeeId?: string;
-  candidateName?: string | null;
+  // teamName?: string | null;
+  // newly teamName
+  teamName?: string[]; // ✅ Now an array of strings
   markAsSend?: boolean;
   followUpDate?: string;
 }
 
-interface InterviewActionDetails {
-  proceedToInterview?: boolean;
+interface ProjectActionDetails {
+  proceedToSendProject?: boolean;
   interviewDateTime?: string;
   markAsClose?: boolean;
 }
 
-// Main JobProfile interface
-interface JobProfile {
+// Main ProjectProfile interface
+interface ProjectProfile {
   _id: string;
   clientId: PopulatedClientDetails;
   title: string;
@@ -51,9 +54,10 @@ interface JobProfile {
   clientBudget: number;
   status: string;
   jd?: string;
+  proposalDescription:string,
 
   actionDetails?: ActionDetails;
-  interviewActionDetails?: InterviewActionDetails;
+  projectActionDetails?: ProjectActionDetails;
   // sentProfiles?: SentProfile[];
 
   createdAt: string;
@@ -67,51 +71,58 @@ export const ProjectLeads = () => {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
+  const [projectProfiles, setProjectProfiles] = useState<ProjectProfile[]>([]);
 
+  const fetchProjectProfiles = async () => {
+    try {
+      await axios
+        .get("http://localhost:3006/projects")
+        .then((response) => {
+          setProjectProfiles(response.data);
+          console.log(
+            "This is project fetching data through projectlead page",
+            response.data
+          );
+        })
+        .catch((error) => {
+          console.log("Error to fetch Project ProfilesData", error);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
-    const fetchJobProfiles = async () => {
-      try {
-        await axios
-          .get("https://api.vidhema.com/getAllJobProfiles")
-          .then((response) => {
-            setJobProfiles(response.data);
-          })
-          .catch((error) => {
-            console.log("Error to fetch jobProfilesData", error);
-          });
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchJobProfiles();
+    fetchProjectProfiles();
   }, []);
 
-  const addJobProfile = async () => {
+  console.log("Fetching all project ", projectProfiles);
+  const addProjectProfile = async () => {
     try {
-      const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+      const response = await axios.get("http://localhost:3006/projects");
+      setProjectProfiles(response.data);
+      console.log(
+        "This is project add ProjectProfile  data through projectlead page",
+        response.data
       );
-      setJobProfiles(response.data);
-      navigate("/jobs");
+      navigate("/projects");
     } catch (error) {
-      console.log("Error fetching updated job profiles", error);
+      console.log("Error fetching updated Project profiles", error);
     }
   };
 
-  const handleEdit = (profile: JobProfile) => {
-    navigate(`/jobs/edit/${profile._id}`);
+  const handleEdit = (profile: ProjectProfile) => {
+    navigate(`/projects/edit/${profile._id}`);
   };
 
-  const handleUpdateProfiles = (updatedProfiles: JobProfile[]) => {
-    setJobProfiles(updatedProfiles);
+  const handleUpdateProjects = (updatedProjects: ProjectProfile[]) => {
+    setProjectProfiles(updatedProjects);
   };
 
-  const sortedProfiles = [...jobProfiles].sort(
+  const sortedProjects = [...projectProfiles].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  const filteredProfiles = sortedProfiles.filter((profile) => {
+  const filteredProjects = sortedProjects.filter((profile) => {
     const matchesSearch =
       profile.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile?.clientId?.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -120,40 +131,44 @@ export const ProjectLeads = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const activeProfiles = jobProfiles.filter(
-    (profile) => profile.status === "Active"
+  const activeProfiles = projectProfiles.filter(
+    (profile) => profile?.status === "Active"
   ).length;
-  const scheduledInterviews = jobProfiles.filter(
-    (profile) => profile.status === "Interview Scheduled"
-  ).length;
-  // const scheduledInterviews = jobProfiles.filter(profile => profile.interviewActionDetails.proceedToInterview).length;
 
-  // Find the profile to edit if on /jobs/edit/:id
+  console.log("Active profiles filter:", activeProfiles);
+  const scheduledInterviews = projectProfiles.filter(
+    (profile) => profile.status === "Meeting Scheduled"
+  ).length;
+ 
+  // Find the profile to edit if on /project/edit/:id
   let editData = null;
-  if (location.pathname.startsWith("/jobs/edit") && params.id) {
-    editData = jobProfiles.find((p) => p._id === params.id) || null;
+  if (location.pathname.startsWith("/projects/edit") && params.id) {
+    editData = projectProfiles.find((p) => p._id === params.id) || null;
     console.log("editData is: ", editData);
   }
 
   // Render the form for create or edit
-  if (location.pathname === "/jobs/create") {
+  if (location.pathname === "/projects/create") {
     return (
-      <JobProfileForm
-        onSave={addJobProfile}
-        onCancel={() => navigate("/jobs")}
+      <ProjectLeadForm
+        onSave={addProjectProfile}
+        onCancel={() => navigate("/projects")}
         editData={null}
       />
     );
   }
-  if (location.pathname.startsWith("/jobs/edit") && params.id) {
+  if (location.pathname.startsWith("/projects/edit") && params.id) {
     return (
-      <JobProfileForm
-        onSave={addJobProfile}
-        onCancel={() => navigate("/jobs")}
+      <ProjectLeadForm
+        onSave={addProjectProfile}
+        onCancel={() => navigate("/projects")}
         editData={editData}
       />
     );
   }
+
+  console.log("Active profile", activeProfiles);
+  console.log("Schedule interview", scheduledInterviews);
 
   return (
     <div className="space-y-8 bg-gradient-to-br from-gray-50 to-purple-50 min-h-screen p-6">
@@ -168,13 +183,13 @@ export const ProjectLeads = () => {
         </div>
         <Button
           onClick={() => {
-            navigate("/jobs/create");
+            navigate("/projects/create");
           }}
           className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
           size="lg"
         >
           <Plus className="h-5 w-5 mr-2" />
-          Add New Projects
+          Add New Project
         </Button>
       </div>
 
@@ -185,10 +200,10 @@ export const ProjectLeads = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Total Projects
+                  Total Projects Leads
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {jobProfiles.length}
+                  {projectProfiles.length}
                 </p>
               </div>
               <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -221,7 +236,7 @@ export const ProjectLeads = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Scheduled Interviews
+                  Scheduled Meeting
                 </p>
                 <p className="text-3xl font-bold text-blue-600">
                   {scheduledInterviews}
@@ -239,7 +254,7 @@ export const ProjectLeads = () => {
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <CardTitle className="text-xl font-semibold text-gray-800">
-              Projects Profile Directory
+              Projects Leads Directory
             </CardTitle>
             <div className="flex gap-4">
               <div className="relative w-80">
@@ -259,9 +274,9 @@ export const ProjectLeads = () => {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Profile Sent">Profile Sent</SelectItem>
-                  <SelectItem value="Interview Scheduled">
-                    Interview Scheduled
+                  <SelectItem value="Lead Sent">Lead Sent</SelectItem>
+                  <SelectItem value="Meeting Scheduled">
+                    Meeting Scheduled
                   </SelectItem>
                   <SelectItem value="Closed">Closed</SelectItem>
                   <SelectItem value="On Hold">On Hold</SelectItem>
@@ -271,9 +286,9 @@ export const ProjectLeads = () => {
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <JobProfileList
-            profiles={filteredProfiles}
-            onUpdate={handleUpdateProfiles}
+          <ProjectLeadList
+            projects={filteredProjects}
+            onUpdate={handleUpdateProjects}
             onEdit={handleEdit}
           />
         </CardContent>

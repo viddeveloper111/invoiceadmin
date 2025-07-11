@@ -65,9 +65,10 @@ interface Client {
 interface ClientListProps {
   clients: Client[];
   onUpdate: (clients: Client[]) => void;
+  refetchClients: () => void; // Add this line
 }
 
-export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
+export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListProps) => {
   // const [editingClient, setEditingClient] = useState<number | null>(null);
   const [editingClient, setEditingClient] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<Client>>({});
@@ -136,16 +137,18 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
       );
 
       console.log("This is the updating data sending to database", result.data);
-      const updatedClients = clients.map((client) =>
-        client.id === id ? { ...client, ...updates } : client
-      );
-      onUpdate(updatedClients);
+      refetchClients(); // refresh the list after successful update
+      // const updatedClients = clients.map((client) =>
+      //   client.id === id ? { ...client, ...updates } : client
+      // );
+      // onUpdate(updatedClients);
     } catch (error) {
       console.log("thiere is error in updating", error);
     }
   };
   console.log("saving client", editingClient, editFormData);
   console.log("Follow Up  client", followUps, followupData);
+  
   const saveEdit = (e) => {
     e.preventDefault();
     if (editingClient) {
@@ -191,7 +194,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
         chatMessages: [...messages, newMsg],
         conversations: (client.conversations || 0) + 1,
       });
-      setChatUps(null);
+      //setChatUps(null);   // remove this line to keep dialog open
       setNewMessage("");
     }
   };
@@ -430,7 +433,7 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                             Phone
                           </Label>
                           <Input
-                            value={editFormData.phone || ""}
+                            value={editFormData.phone || editFormData.mobileNo || ""}
                             onChange={(e) =>
                               setEditFormData((prev) => ({
                                 ...prev,
@@ -537,13 +540,13 @@ export const ClientList = ({ clients, onUpdate }: ClientListProps) => {
                         onClick={() => setChatUps(client.id)}
                       >
                         <MessageCircle className="h-4 w-4 mr-1" />
-                        Recap ({client.conversations || 0})
+                        Chat ({client.conversations || 0})
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
                       <DialogHeader>
                         <DialogTitle className="text-xl font-bold text-gray-900">
-                          Recap History - {client.name}
+                          Chat History - {client.name}
                         </DialogTitle>
                       </DialogHeader>
                       <div className="flex-1 overflow-hidden flex flex-col">

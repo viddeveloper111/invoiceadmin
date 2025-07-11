@@ -99,11 +99,14 @@ export const JobProfileList = ({
         return "bg-gray-100 text-gray-800";
     }
   };
+ // getting the env data of the api
+
+  const baseURL = import.meta.env.VITE_API_URL;
 
   const updateFollowupDate = async (id: string) => {
     try {
       await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         {
           "actionDetails.followUpDate": newFollowupDate,
         },
@@ -111,7 +114,7 @@ export const JobProfileList = ({
       );
       // Fetch the latest profiles from the backend
       const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+        `${baseURL}/getAllJobProfiles`
       );
 
       onUpdate(response.data);
@@ -126,7 +129,7 @@ export const JobProfileList = ({
     if (!selectedCandidate || !sendDateTime) return;
     try {
       await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         {
           status: "Profile Sent",
           "actionDetails.markAsSend": true,
@@ -137,7 +140,7 @@ export const JobProfileList = ({
       );
       // Fetch the latest profiles from the backend
       const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+        `${baseURL}/getAllJobProfiles`
       );
 
       onUpdate(response.data);
@@ -153,7 +156,7 @@ export const JobProfileList = ({
     if (!interviewDate) return;
     try {
       await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         {
           "interviewActionDetails.interviewDateTime": interviewDate,
           "interviewActionDetails.proceedToInterview": true,
@@ -163,7 +166,7 @@ export const JobProfileList = ({
       );
       // Fetch the latest profiles from the backend
       const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+        `${baseURL}/getAllJobProfiles`
       );
       onUpdate(response.data);
       setScheduleInterview(null);
@@ -176,14 +179,14 @@ export const JobProfileList = ({
   const closeJob = async (id: string) => {
     try {
       await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         { status: "Closed" },
         { headers: { "Content-Type": "application/json" } }
       );
 
       // Fetch the latest profiles from the backend
       const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+        `${baseURL}/getAllJobProfiles`
       );
       onUpdate(response.data); // Update UI with fresh data
       console.log("Job status updated to Closed");

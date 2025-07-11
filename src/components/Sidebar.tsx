@@ -26,7 +26,7 @@ export const Sidebar = () => {
     { id: "jobs", label: "Job Profiles", icon: Briefcase, path: "/jobs" },
      {
       id: "projectleads",
-      label: "ProjectLeads",
+      label: "Project Leads",
       icon: UserCheck,
       path: "/projects",
     },

@@ -219,10 +219,14 @@ export const Dashboard = () => {
   // total pending followUp
   const [totalPendingFollowUpBoth, setTotalPendingFollowUpBoth] = useState(0);
   console.log("total pending follll", totalPendingFollowUpBoth);
+
+  // getting the env data of the api
+
+  const baseURL = import.meta.env.VITE_API_URL;
   const getJobsData = async () => {
     try {
       const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+        `${baseURL}/getAllJobProfiles`
       );
       console.log(
         "This is the jobs data getting in dashboard page",
@@ -285,7 +289,7 @@ export const Dashboard = () => {
 
   const getClientData = async () => {
     try {
-      const response = await axios.get("https://api.vidhema.com/clients");
+      const response = await axios.get(`${baseURL}/clients`);
       console.log(
         "This is the clientData getting in dashoboard page",
         response.data
@@ -610,9 +614,9 @@ export const Dashboard = () => {
                             {activity.type}
                           </p>
                           <p className="text-sm text-gray-600 truncate">
-                            {`${
-                              newClientCreated?.company || activity.description
-                            } added to system`}
+                            {` Follow -Up scheduled with Client${
+                              nextFollowupClient?.company || activity.description
+                            } `}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
                             {newClientCreated
@@ -630,7 +634,7 @@ export const Dashboard = () => {
                           <p className="text-sm text-gray-600 truncate">
                             {`Follow-up scheduled with Job ${
                               nextFollowupJobs?.title || activity.description
-                            } at `}
+                            } `}
                           </p>
                           <p className="text-sm text-gray-600 truncate">
                             {nextFollowupClient?.followups?.length > 0
