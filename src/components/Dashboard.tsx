@@ -8,6 +8,7 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
+  UserCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -52,10 +53,17 @@ export const Dashboard = () => {
       color: "bg-blue-500",
     },
     {
-      type: "Job Profile",
+      type: "Job Added",
       description: "Senior React Developer position created",
       time: "4 hours ago",
       icon: Briefcase,
+      color: "bg-green-500",
+    },
+    {
+      type: "Project Added",
+      description: "Senior React Developer position created",
+      time: "4 hours ago",
+      icon: UserCheck,
       color: "bg-green-500",
     },
     {
@@ -72,7 +80,13 @@ export const Dashboard = () => {
       icon: Calendar,
       color: "bg-orange-500",
     },
-
+    {
+      type: "Follow-up-Project",
+      description: "Follow-up scheduled of Project with ABC Technologies",
+      time: "6 hours ago",
+      icon: Calendar,
+      color: "bg-orange-500",
+    },
     {
       type: "Payment",
       description: "Payment reminder sent to XYZ Ltd",
@@ -190,13 +204,39 @@ export const Dashboard = () => {
     __v: number;
   }
 
+  interface ProjectActionDetails {
+    proceedToSendProject?: boolean;
+    interviewDateTime?: string;
+    markAsClose?: boolean;
+  }
+
+  // Main ProjectProfile interface
+  interface ProjectProfile {
+    _id: string;
+    clientId: PopulatedClientDetails;
+    title: string;
+    contactPersonName: string;
+    skills: string[];
+    description: string;
+    clientBudget: number;
+    status: string;
+    jd?: string;
+    proposalDescription: string;
+
+    actionDetails?: ActionDetails;
+    projectActionDetails?: ProjectActionDetails;
+    // sentProfiles?: SentProfile[];
+
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  }
+
+  // all the state related to client
   const [clientValue, setClientValue] = useState();
   const [totalClients, setTotalClients] = useState();
-  const [jobsValue, setJobsValue] = useState();
-  const [activeJobProfile, setActiveJobProfile] = useState();
   const [partialPayementStatus, setPartialPayementStatus] = useState();
   const [newClientCreated, setNewClientCreated] = useState<Client | null>(null);
-  const [newJobCreated, setNewJobCreated] = useState<JobProfile | null>(null);
   const [partialPayementClient, setPartialPayementClient] =
     useState<Client | null>(null);
   const [nextFollowupsCount, setNextFollowupsCount] = useState<number>(0);
@@ -207,6 +247,12 @@ export const Dashboard = () => {
     { client: Client; followup: any }[]
   >([]);
 
+  // all the state related to jobs
+  const [jobsValue, setJobsValue] = useState();
+  const [activeJobProfile, setActiveJobProfile] = useState();
+
+  const [newJobCreated, setNewJobCreated] = useState<JobProfile | null>(null);
+
   // upcoming followup for the jobs
   const [nextFollowupJobs, setNextFollowupJobs] = useState<JobProfile | null>(
     null
@@ -215,6 +261,20 @@ export const Dashboard = () => {
     { job: JobProfile; followup: any }[]
   >([]);
   const [nextFollowupJobsCount, setNextFollowupJobsCount] = useState<number>(0); // ✅ Add this
+
+  // all state related to Projects
+  const [ProjectsValue, setProjectsValue] = useState();
+  const [activeProjectsValue, setActiveProjectsValue] = useState();
+  const [newProjectCreated, setNewProjectCreated] =
+    useState<ProjectProfile | null>(null);
+  const [nextFollowupProjectCount, setNextFollowupProjectCount] =
+    useState<number>(0); // ✅ Add this
+  // upcoming followup for the Projects
+  const [nextFollowupProjects, setNextFollowupProjects] =
+    useState<ProjectProfile | null>(null);
+  const [newupcomingFollowupsProjects, setUpcomingFollowupsProjects] = useState<
+    { project: ProjectProfile; followup: any }[]
+  >([]);
 
   // total pending followUp
   const [totalPendingFollowUpBoth, setTotalPendingFollowUpBoth] = useState(0);
@@ -225,9 +285,7 @@ export const Dashboard = () => {
   const baseURL = import.meta.env.VITE_API_URL;
   const getJobsData = async () => {
     try {
-      const response = await axios.get(
-        `${baseURL}/getAllJobProfiles`
-      );
+      const response = await axios.get(`${baseURL}/getAllJobProfiles`);
       console.log(
         "This is the jobs data getting in dashboard page",
         response.data
@@ -378,6 +436,72 @@ export const Dashboard = () => {
     }
   };
 
+  // get the projects data
+  const getProjectData = async () => {
+    try {
+      const response = await axios.get(`${baseURL}/projects `);
+      console.log(
+        "This is the jobs data getting in dashboard page",
+        response.data
+      );
+      setProjectsValue(response.data);
+      const activeProject = response.data.filter(
+        (project) => project.status === "Active"
+      ).length;
+      setActiveProjectsValue(activeProject);
+
+      const AllProjectsData = [...response.data];
+      const newJob = AllProjectsData.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+
+        return dateB - dateA; //latest create value
+      })[0];
+
+      setNewProjectCreated(newJob);
+
+      // lunch
+      const now = Date.now();
+
+      // Filter jobs with upcoming followups
+      // And prepare an array of { job, followupDate } objects
+      // Find upcoming followups
+      const futureFollowups = AllProjectsData.filter(
+        (project) => project.actionDetails?.followUpDate
+      )
+        .map((project) => {
+          const followupTime = new Date(
+            project.actionDetails.followUpDate
+          ).getTime();
+          return { project, followupTime };
+        })
+        .filter((item) => item.followupTime > now);
+
+      console.log("🟢 Future Projects  Followups:", futureFollowups);
+
+      // Set count
+      setNextFollowupProjectCount(futureFollowups.length);
+
+      // Sort by soonest follow-up
+      const topFollowups = futureFollowups
+        .sort((a, b) => a.followupTime - b.followupTime)
+        .slice(0, 3);
+
+      // Set next followup Projects (earliest)
+      setNextFollowupProjects(topFollowups[0]?.project || null);
+
+      // Store top upcoming Projects for list
+      setUpcomingFollowupsProjects(
+        topFollowups.map((f) => ({
+          project: f.project,
+          followup: f.followupTime,
+        }))
+      );
+    } catch (error) {
+      console.log("Error in getting the value of job data ", error);
+    }
+  };
+
   console.log("This is the clientData getting in dashoboard page", clientValue);
   console.log("This is the TotalClient in dashoboard page", totalClients);
 
@@ -443,14 +567,20 @@ export const Dashboard = () => {
   useEffect(() => {
     getClientData();
     getJobsData();
-    setTotalPendingFollowUpBoth(nextFollowupJobsCount + nextFollowupsCount);
+    getProjectData();
+    setTotalPendingFollowUpBoth(
+      nextFollowupJobsCount + nextFollowupsCount + nextFollowupProjectCount
+    );
     console.log("Updated clientValue:", clientValue);
     console.log("Updated JobsValue:", jobsValue);
+    console.log("Updated ProjectsValue", ProjectsValue);
+    console.log("Active Project", activeProjectsValue);
     console.log("Active Job Profile", activeJobProfile);
     console.log("Partial Payement Status", partialPayementStatus);
     console.log("Newly Created Client", newClientCreated);
     console.log("Newly Job Create ", newJobCreated);
-  }, [nextFollowupJobsCount, nextFollowupsCount]);
+    console.log("Newly Projects Created", newProjectCreated);
+  }, [nextFollowupJobsCount, nextFollowupsCount, nextFollowupProjectCount]);
 
   console.log("Updated clientValue:", clientValue);
   console.log("Updated JobsValue:", jobsValue);
@@ -465,6 +595,8 @@ export const Dashboard = () => {
 
   console.log("this is follow Up Jobs", nextFollowupJobs);
   console.log("this is follow Up Jobs Count", nextFollowupJobsCount);
+  console.log("this is follow Up Projects", nextFollowupProjects);
+  console.log("this is follow Up Projects Count", nextFollowupProjectCount);
   return (
     <div className="space-y-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-6">
       <div className="flex items-center justify-between">
@@ -510,6 +642,10 @@ export const Dashboard = () => {
                     {activeJobProfile || stat.value}
                   </div>
                 ) : stat.title === "Pending Follow-ups" ? (
+                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                    {totalPendingFollowUpBoth || stat.value}
+                  </div>
+                ) : stat.title === "Follow-up-Project" ? (
                   <div className="text-3xl font-bold text-gray-900 mb-2">
                     {totalPendingFollowUpBoth || stat.value}
                   </div>
@@ -578,7 +714,7 @@ export const Dashboard = () => {
                               : ""}
                           </p>
                         </div>
-                      ) : activity.type === "Job Profile" ? (
+                      ) : activity.type === "Job Added" ? (
                         <div>
                           <p className="text-sm font-semibold text-gray-900">
                             {activity.type}
@@ -587,6 +723,24 @@ export const Dashboard = () => {
                             {`${
                               newJobCreated?.title || activity.description
                             } position created`}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {newJobCreated
+                              ? formatTimeWithTodayTomorrow(
+                                  newJobCreated.createdAt
+                                )
+                              : ""}
+                          </p>
+                        </div>
+                      ) : activity.type === "Project Added" ? (
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {activity.type}
+                          </p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {`${
+                              newProjectCreated?.title || activity.description
+                            } Project created`}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
                             {newJobCreated
@@ -615,7 +769,27 @@ export const Dashboard = () => {
                           </p>
                           <p className="text-sm text-gray-600 truncate">
                             {` Follow -Up scheduled with Client${
-                              nextFollowupClient?.company || activity.description
+                              nextFollowupClient?.company ||
+                              activity.description
+                            } `}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {newClientCreated
+                              ? formatTimeWithTodayTomorrow(
+                                  newClientCreated.createdAt
+                                )
+                              : ""}
+                          </p>
+                        </div>
+                      ) : activity.type === "Follow-up-Project" ? (
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {activity.type}
+                          </p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {` Follow -Up scheduled with Client${
+                              nextFollowupProjects?.title ||
+                              activity.description
                             } `}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
@@ -693,7 +867,7 @@ export const Dashboard = () => {
             </div> */}
 
             <div className="space-y-4">
-              {newupcomingFollowups.map(({ client, followup }, index) => (
+              {newupcomingFollowups.length >0 ? (newupcomingFollowups.map(({ client, followup }, index) => (
                 <div
                   key={index}
                   className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
@@ -719,7 +893,12 @@ export const Dashboard = () => {
                     </span>
                   </div> */}
                 </div>
-              ))}
+              ))
+            ):(
+              <div className="text-center text-gray-600 text-sm py-6">
+                  🚫 No upcoming follow-ups In Clients. Please Add Your Upcomig FollowUps 
+                </div>
+            )}
             </div>
           </CardContent>
         </Card>
@@ -762,21 +941,22 @@ export const Dashboard = () => {
             </div> */}
 
             <div className="space-y-4">
-              {newupcomingFollowupsJobs.map(({ job, followup }, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
-                      {job.title || "Job Title"}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {formatFollowupDate(job.actionDetails.followUpDate)}
-                    </p>
-                  </div>
-                  {/* same followup and high nhi dikh */}
-                  {/* <div className="flex items-center gap-2">
+              {newupcomingFollowupsJobs.length > 0 ? (
+                newupcomingFollowupsJobs.map(({ job, followup }, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">
+                        {job.title || "Job Title"}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatFollowupDate(job.actionDetails.followUpDate)}
+                      </p>
+                    </div>
+                    {/* same followup and high nhi dikh */}
+                    {/* <div className="flex items-center gap-2">
                     <span
                       className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(
                         followup.priority || "low"
@@ -788,8 +968,90 @@ export const Dashboard = () => {
                       {followup.type || "Follow-up"}
                     </span>
                   </div> */}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-600 text-sm py-6">
+                  🚫 No upcoming follow-ups In Jobs. Please Add Your Upcomig FollowUps 
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* upcoming follow up for the Projects */}
+        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              Upcoming Follow-ups of Projects
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* <div className="space-y-4">
+              {upcomingFollowups.map((followup, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      {followup.client}
+                    </p>
+                    <p className="text-sm text-gray-600">{followup.date}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(
+                        followup.priority
+                      )}`}
+                    >
+                      {followup.priority.toUpperCase()}
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium border border-blue-200">
+                      {followup.type}
+                    </span>
+                  </div>
                 </div>
               ))}
+            </div> */}
+
+            <div className="space-y-4">
+              {newupcomingFollowupsProjects.length >0 ? (newupcomingFollowupsProjects.map(
+                ({ project, followup }, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">
+                        {project.title || "Job Title"}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatFollowupDate(project.actionDetails.followUpDate)}
+                      </p>
+                    </div>
+                    {/* same followup and high nhi dikh */}
+                    {/* <div className="flex items-center gap-2">
+                    <span
+                      className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(
+                        followup.priority || "low"
+                      )}`}
+                    >
+                      {(followup.priority || "low").toUpperCase()}
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium border border-blue-200">
+                      {followup.type || "Follow-up"}
+                    </span>
+                  </div> */}
+                  </div>
+                )
+              )
+            ):(
+               <div className="text-center text-gray-600 text-sm py-6">
+                  🚫 No upcoming follow-ups In Projects. Please Add Your Upcomig FollowUps 
+                </div>
+            )}
             </div>
           </CardContent>
         </Card>

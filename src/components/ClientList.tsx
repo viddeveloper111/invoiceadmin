@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import axios from "axios";
+import { toast } from "@/components/ui/use-toast";
 
 interface Client {
   mobileNo: string;
@@ -38,7 +39,7 @@ interface Client {
   contactPerson: string;
   email: string;
   phone: string;
-  company: string;
+  company: [];
   status: string;
   lastFollowup: string;
   nextFollowup: string;
@@ -68,7 +69,11 @@ interface ClientListProps {
   refetchClients: () => void; // Add this line
 }
 
-export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListProps) => {
+export const ClientList = ({
+  clients,
+  onUpdate,
+  refetchClients,
+}: ClientListProps) => {
   // const [editingClient, setEditingClient] = useState<number | null>(null);
   const [editingClient, setEditingClient] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<Client>>({});
@@ -86,6 +91,7 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
   const [editUps, setEditUps] = useState<string | null>(null); //store the client.id for the edit
   const [followUps, setFollowUps] = useState<string | null>(null); // store client.id
   const [chatUps, setChatUps] = useState<string | null>(null); //store the client.id for the chat purpose
+  const [activeTab, setActiveTab] = useState<"new" | "history">("new");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -142,13 +148,24 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
       //   client.id === id ? { ...client, ...updates } : client
       // );
       // onUpdate(updatedClients);
+       toast({
+              title: "✅ Client Updated",
+              description: "The  Client  has been Updated.",
+            });
     } catch (error) {
       console.log("thiere is error in updating", error);
+       toast({
+              variant: "destructive",
+              title: "❌ Error",
+              description:
+                error?.response?.data?.message ||
+                "Failed to Update  the Client . Please try again.",
+            });
     }
   };
   console.log("saving client", editingClient, editFormData);
   console.log("Follow Up  client", followUps, followupData);
-  
+
   const saveEdit = (e) => {
     e.preventDefault();
     if (editingClient) {
@@ -211,9 +228,9 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
     }).format(amount);
   };
 
@@ -433,7 +450,9 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
                             Phone
                           </Label>
                           <Input
-                            value={editFormData.phone || editFormData.mobileNo || ""}
+                            value={
+                              editFormData.phone || editFormData.mobileNo || ""
+                            }
                             onChange={(e) =>
                               setEditFormData((prev) => ({
                                 ...prev,
@@ -442,6 +461,35 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
                             }
                             className="mt-1"
                           />
+                        </div>
+                        {/* adding the status filed */}
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700">
+                            Status
+                          </Label>
+
+                          <Select
+                            value={editFormData.status}
+                            onValueChange={(value) =>
+                              setEditFormData((prev) => ({
+                                ...prev,
+                                status: value,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="w-full mt-1">
+                              <SelectValue placeholder="Select payment status" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                              <SelectItem value="Active">✅ Active</SelectItem>
+                              <SelectItem value="Pending">
+                                ⏳ Pending
+                              </SelectItem>
+                              <SelectItem value="Inactive">
+                                ❌ Inactive
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <Button
                           onClick={saveEdit}
@@ -453,7 +501,9 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
                     </DialogContent>
                   </Dialog>
 
-                  <Dialog
+                  {/* old dialog or followupd data  */}
+
+                  {/* <Dialog
                     open={followUps === client.id}
                     onOpenChange={(open) =>
                       setFollowUps(open ? client.id : null)
@@ -523,6 +573,133 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
                           Schedule Follow-up
                         </Button>
                       </div>
+                    </DialogContent>
+                  </Dialog> */}
+
+                  {/* new followup data */}
+
+                  <Dialog
+                    open={followUps === client.id}
+                    onOpenChange={(open) => {
+                      setFollowUps(open ? client.id : null);
+                      setActiveTab("new"); // Reset to "new" tab on open
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-green-200 text-green-700 hover:bg-green-50"
+                        onClick={() => {
+                          setFollowUps(client.id);
+                          setFollowupData({ description: "", datetime: "" }); // Reset
+                        }}
+                      >
+                        <Calendar className="h-4 w-4 mr-1" />
+                        Follow-up
+                      </Button>
+                    </DialogTrigger>
+
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-gray-900">
+                          Follow-up Management
+                        </DialogTitle>
+                        <DialogDescription>
+                          View history or add a new follow-up entry.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      {/* Tab Toggle Buttons */}
+                      <div className="flex gap-2 my-4">
+                        <Button
+                          variant={activeTab === "new" ? "default" : "outline"}
+                          onClick={() => setActiveTab("new")}
+                        >
+                          Add New
+                        </Button>
+                        <Button
+                          variant={
+                            activeTab === "history" ? "default" : "outline"
+                          }
+                          onClick={() => setActiveTab("history")}
+                        >
+                          History
+                        </Button>
+                      </div>
+
+                      {/* Conditional Tabs */}
+                      {activeTab === "new" ? (
+                        <div className="space-y-4">
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">
+                              Follow-up Description
+                            </Label>
+                            <Textarea
+                              value={followupData.description}
+                              onChange={(e) =>
+                                setFollowupData((prev) => ({
+                                  ...prev,
+                                  description: e.target.value,
+                                }))
+                              }
+                              placeholder="Describe the purpose of this follow-up..."
+                              className="mt-1 min-h-[80px]"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">
+                              Date & Time
+                            </Label>
+                            <Input
+                              type="datetime-local"
+                              value={followupData.datetime}
+                              onChange={(e) =>
+                                setFollowupData((prev) => ({
+                                  ...prev,
+                                  datetime: e.target.value,
+                                }))
+                              }
+                              className="mt-1"
+                            />
+                          </div>
+                          <Button
+                            onClick={(e) => addFollowup(e, client.id)}
+                            className="w-full bg-green-600 hover:bg-green-700"
+                          >
+                            Schedule Follow-up
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                          {client.followups && client.followups.length > 0 ? (
+                            client.followups.map((fu, index) => (
+                              <div
+                                key={index}
+                                className="border rounded-md p-3 text-sm text-gray-700 bg-gray-50"
+                              >
+                                <p className="font-medium">{fu.description}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(fu.datetime).toLocaleString()}
+                                </p>
+                                {/* <p
+                                  className={`text-xs mt-1 font-medium ${
+                                    fu.completed
+                                      ? "text-green-600"
+                                      : "text-yellow-600"
+                                  }`}
+                                >
+                                  {fu.completed ? "Completed" : "Pending"}
+                                </p> */}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-500">
+                              No follow-up history yet.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -669,7 +846,7 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
                           <>
                             <div>
                               <Label className="text-sm font-medium text-gray-700">
-                                Total Amount ($)
+                                Total Amount (₹)
                               </Label>
                               <Input
                                 type="number"
@@ -685,7 +862,7 @@ export const ClientList = ({ clients, onUpdate , refetchClients }: ClientListPro
                             </div>
                             <div>
                               <Label className="text-sm font-medium text-gray-700">
-                                Paid Amount ($)
+                                Paid Amount (₹)
                               </Label>
                               <Input
                                 type="number"

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -37,12 +38,35 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
     contactPerson: "",
     email: "",
     mobileNo: "",
-    company: "",
+    company: [] as string[],
     status: "Active",
     nextFollowup: "",
     paymentStatus: "Paid",
     notes: "",
+    totalAmount: 0,
   });
+
+  // const handleCompanyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     const input = e.currentTarget.value.trim();
+
+  //     if (input && !formData.company.includes(input)) {
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         company: [...prev.company, input],
+  //       }));
+  //       e.currentTarget.value = "";
+  //     }
+  //   }
+  // };
+
+  // const removeCompany = (companyToRemove: string) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     company: prev.company.filter((c) => c !== companyToRemove),
+  //   }));
+  // };
 
   // getting the env data of the api
 
@@ -78,6 +102,83 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
 
     //   onCancel();
 
+    // Validate name
+    if (!formData.name.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Client name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate contactPerson
+    if (!formData.contactPerson.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "contactPerson name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate notes/description
+    if (!formData.notes.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Notes/descritption  is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Validate email
+    if (!formData.email.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Email is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "⚠️ Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (formData.totalAmount <= 0 || isNaN(formData.totalAmount)) {
+      toast({
+        title: "⚠️ Invalid Budget",
+        description: "Please enter a valid budget amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate follow-up date
+    if (!formData.nextFollowup) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Follow-up date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // // Validate client budget
+    // if (!formData.clientBudget || isNaN(Number(formData.clientBudget))) {
+    //   toast({
+    //     title: "⚠️ Missing Field",
+    //     description: "A valid client budget is required.",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
+
     // this new night 9/7/25
     const payload = {
       ...formData,
@@ -110,13 +211,24 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
 
       // ✅ Navigate back or close form
       onCancel();
+      toast({
+        title: "✅ Client Created",
+        description: "The new Client  has been created.",
+      });
     } catch (error) {
       console.log("there is error in submitting the data", error);
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to save the Client . Please try again.",
+      });
     }
   };
   console.log("this is the formdata ", formData);
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -175,7 +287,6 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       onChange={(e) => handleChange("name", e.target.value)}
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="Enter client/company name"
-                      required
                     />
                   </div>
 
@@ -195,7 +306,6 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       }
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="Primary contact person"
-                      required
                     />
                   </div>
                 </div>
@@ -216,7 +326,6 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       onChange={(e) => handleChange("email", e.target.value)}
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="contact@company.com"
-                      required
                     />
                   </div>
 
@@ -234,7 +343,6 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       onChange={(e) => handleChange("mobileNo", e.target.value)}
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="+1 (555) 123-4567"
-                      required
                     />
                   </div>
                 </div>
@@ -251,10 +359,28 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleChange("company", e.target.value)}
+                    // onKeyDown={handleCompanyKeyDown}
                     className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                     placeholder="Company name and industry details"
-                    required
                   />
+                  
+                  {/* <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.company.map((company, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
+                      >
+                        {company}
+                        <button
+                          type="button"
+                          onClick={() => removeCompany(company)}
+                          className="ml-2 text-blue-500 hover:text-red-500 focus:outline-none"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div> */}
                 </div>
               </div>
 
@@ -287,7 +413,7 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                     </Select>
                   </div>
 
-                  {/* <div className="space-y-2">
+                  <div className="space-y-2">
                     <Label
                       htmlFor="clientBudget"
                       className="text-sm font-semibold text-gray-700 flex items-center gap-2"
@@ -298,15 +424,19 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                     <Input
                       id="clientBudget"
                       type="number"
-                      value=""
+                      name="totalAmount"
+                      value={formData.totalAmount}
                       onChange={(e) =>
-                        handleChange("clientBudget", e.target.value)
+                        handleChange(
+                          "totalAmount",
+                          parseFloat(e.target.value) || 0
+                        )
                       }
                       placeholder="e.g. Rs 80,000"
                       className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                      required
+                      
                     />
-                  </div> */}
+                  </div>
 
                   <div className="space-y-2">
                     <Label

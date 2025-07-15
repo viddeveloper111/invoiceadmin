@@ -27,6 +27,7 @@ import {
   FileText,
   Users,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ProjectProfileFormProps {
   onSave: () => void;
@@ -139,6 +140,8 @@ export const ProjectLeadForm = ({
     };
     getAllClients();
   }, []);
+
+  const navigate=useNavigate()
 
   // getting the env data of the api
 
@@ -327,11 +330,17 @@ export const ProjectLeadForm = ({
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Project Information Section */}
               <div className="space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Briefcase className="h-5 w-5 text-purple-600" />
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-2">
+                           <Briefcase className="h-5 w-5 text-purple-600" />
                   <h3 className="text-lg font-semibold text-gray-800">
                     Project Information
                   </h3>
+                  </div>
+                
+                  <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={()=>navigate('/clients/create')}>
+                    Add Client
+                  </Button>
                 </div>
 
                 <div className="space-y-2">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IndianRupee } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -50,11 +51,13 @@ export const JobProfileForm = ({
     contactPersonName: editData?.contactPersonName || "",
     followUpDate: formatDate(editData?.actionDetails?.followUpDate || ""),
     clientBudget: editData?.clientBudget || "",
-    skills: editData?.skills
-      ? Array.isArray(editData.skills)
-        ? editData.skills.join(", ")
-        : editData.skills
-      : "",
+    // skills: editData?.skills
+    //   ? Array.isArray(editData.skills)
+    //     ? editData.skills.join(", ")
+    //     : editData.skills
+    //   : "",
+    // new ly so that skills should be at down
+        skills: editData?.skills ?? [],
     description: editData?.description || "",
     status: editData ? editData.status : "Active",
     jdFile: editData?.jd || "",
@@ -74,6 +77,28 @@ export const JobProfileForm = ({
     getAllClients();
   }, []);
 
+  // this for the skill enter and delet
+  const handleSkillKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const input = e.currentTarget.value.trim();
+      if (input && !formData.skills.includes(input)) {
+        setFormData((prev) => ({
+          ...prev,
+          skills: [...prev.skills, input],
+        }));
+        e.currentTarget.value = "";
+      }
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((skill) => skill !== skillToRemove),
+    }));
+  };
+
   // getting the env data of the api
 
   const baseURL = import.meta.env.VITE_API_URL;
@@ -86,14 +111,81 @@ export const JobProfileForm = ({
     );
     if (!selectedClient) {
       console.log("Please select a client.");
+      toast({
+        title: " Enter the Client",
+        description: "The Client has not been selected.",
+      });
+
       return;
     }
+    // Validate title
+    if (!formData.title.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Job title is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate contact person
+    if (!formData.contactPersonName.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Contact person name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate follow-up date
+    if (!formData.followUpDate) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Follow-up date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate client budget
+    if (!formData.clientBudget || isNaN(Number(formData.clientBudget))) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "A valid client budget is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate description
+    if (!formData.description.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Project description is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate title
+    if (!formData.candidateName.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "candidateName is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
 
     const payload = {
       clientId: selectedClient._id,
       title: formData.title,
       contactPersonName: formData.contactPersonName,
-      skills: formData.skills.split(",").map((skill: string) => skill.trim()),
+      // skills: formData.skills.split(",").map((skill: string) => skill.trim()),
+       // enter based skill set
+      skills: formData.skills,
       description: formData.description,
       // clientBudget: Number(formData.clientBudget.replace(/[^0-9.-]+/g, "")),
       clientBudget: Number(formData.clientBudget),
@@ -111,16 +203,31 @@ export const JobProfileForm = ({
           `${baseURL}/updateJobProfile/${editData._id}`,
           payload
         );
+        toast({
+          title: "✅ Job Updated",
+          description: "The Job  was updated successfully.",
+        });
       } else {
         const response = await axios.post(
           `${baseURL}/createJobProfile`,
           payload
         );
+        toast({
+          title: "✅ Job Created",
+          description: "The new Job  has been created.",
+        });
       }
       onSave();
     } catch (error) {
       console.log("Failed to save job profile");
       console.error(error);
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to save the Job . Please try again.",
+      });
     }
   };
 
@@ -189,7 +296,6 @@ export const JobProfileForm = ({
                     onChange={(e) => handleChange("title", e.target.value)}
                     placeholder="e.g., Senior React Developer"
                     className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500 rounded-lg"
-                    required
                   />
                 </div>
 
@@ -207,7 +313,6 @@ export const JobProfileForm = ({
                       onValueChange={(value) =>
                         handleChange("clientName", value)
                       }
-                      required
                     >
                       <SelectTrigger
                         id="clientName"
@@ -241,7 +346,6 @@ export const JobProfileForm = ({
                       }
                       className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                       placeholder="Primary contact person"
-                      required
                     />
                   </div>
                 </div>
@@ -292,7 +396,6 @@ export const JobProfileForm = ({
                         handleChange("followUpDate", e.target.value)
                       }
                       className="h-12 border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg"
-                      required
                     />
                   </div>
 
@@ -302,7 +405,7 @@ export const JobProfileForm = ({
                       className="text-sm font-semibold text-gray-700 flex items-center gap-2"
                     >
                       <IndianRupee className="h-4 w-4 text-green-600" />
-                      Budget 
+                      Budget
                     </Label>
                     <Input
                       id="clientBudget"
@@ -313,12 +416,12 @@ export const JobProfileForm = ({
                       }
                       placeholder="e.g. Rs 80,000"
                       className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                      required
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* old skill type */}
+                {/* <div className="space-y-2">
                   <Label
                     htmlFor="skills"
                     className="text-sm font-semibold text-gray-700 flex items-center gap-2"
@@ -332,8 +435,46 @@ export const JobProfileForm = ({
                     onChange={(e) => handleChange("skills", e.target.value)}
                     placeholder="e.g., React, TypeScript, Node.js, AWS"
                     className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
-                    required
+                    
                   />
+                </div> */}
+
+                {/* newly added skill set on the basis of the enter */}
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="skills"
+                    className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                  >
+                    <Code className="h-4 w-4 text-indigo-600" />
+                    Required Skills (Press Enter to Add)
+                  </Label>
+
+                  <Input
+                    id="skills"
+                    placeholder="e.g., React, TypeScript, AWS"
+                    onKeyDown={handleSkillKeyDown}
+                    className="h-12 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                  />
+
+                  {/* Skills Tags Display */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.skills.map((skill, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeSkill(skill)}
+                          className="ml-2 text-indigo-500 hover:text-red-500 focus:outline-none"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -353,7 +494,6 @@ export const JobProfileForm = ({
                     rows={4}
                     placeholder="Detailed job description, responsibilities, and requirements..."
                     className="border-gray-300 focus:border-gray-500 focus:ring-gray-500 rounded-lg resize-none"
-                    required
                   />
                 </div>
               </div>

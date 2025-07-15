@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+import { IndianRupee } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface PopulatedClientDetails {
   _id: string;
@@ -66,6 +68,13 @@ interface JobProfileListProps {
   onEdit: (profile: JobProfile) => void;
 }
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(amount);
+};
+
 export const JobProfileList = ({
   profiles,
   onUpdate,
@@ -82,6 +91,10 @@ export const JobProfileList = ({
     null
   );
   const [interviewDate, setInterviewDate] = useState("");
+  // confirm the close button feature pop up
+  const [confirmCloseJobId, setConfirmCloseJobId] = useState<string | null>(
+    null
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -99,7 +112,7 @@ export const JobProfileList = ({
         return "bg-gray-100 text-gray-800";
     }
   };
- // getting the env data of the api
+  // getting the env data of the api
 
   const baseURL = import.meta.env.VITE_API_URL;
 
@@ -113,15 +126,24 @@ export const JobProfileList = ({
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(
-        `${baseURL}/getAllJobProfiles`
-      );
+      const response = await axios.get(`${baseURL}/getAllJobProfiles`);
 
       onUpdate(response.data);
       setEditingFollowup(null);
       setNewFollowupDate("");
+        toast({
+                    title: "✅ Job is Updated",
+                    description: "The  Job  has been Updated.",
+                  });
     } catch (error) {
       console.log("Error updating Followup Date", error);
+       toast({
+                    variant: "destructive",
+                    title: "❌ Error",
+                    description:
+                      error?.response?.data?.message ||
+                      "Failed to Update  the Job . Please try again.",
+                  });
     }
   };
 
@@ -139,9 +161,7 @@ export const JobProfileList = ({
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(
-        `${baseURL}/getAllJobProfiles`
-      );
+      const response = await axios.get(`${baseURL}/getAllJobProfiles`);
 
       onUpdate(response.data);
       setSendProfileDialog(null);
@@ -165,9 +185,7 @@ export const JobProfileList = ({
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(
-        `${baseURL}/getAllJobProfiles`
-      );
+      const response = await axios.get(`${baseURL}/getAllJobProfiles`);
       onUpdate(response.data);
       setScheduleInterview(null);
       setInterviewDate("");
@@ -185,9 +203,7 @@ export const JobProfileList = ({
       );
 
       // Fetch the latest profiles from the backend
-      const response = await axios.get(
-        `${baseURL}/getAllJobProfiles`
-      );
+      const response = await axios.get(`${baseURL}/getAllJobProfiles`);
       onUpdate(response.data); // Update UI with fresh data
       console.log("Job status updated to Closed");
     } catch (error) {
@@ -217,8 +233,9 @@ export const JobProfileList = ({
                     <p className="text-xs">{profile.clientId.name}</p>
                   </div>
                   <div>
+                    {/* <IndianRupee className="h-4 w-4 text-green-600" /> */}
                     <p className="font-medium text-gray-900">Budget</p>
-                    <p>{profile.clientBudget}</p>
+                    <p>{formatCurrency(profile.clientBudget)}</p>
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Follow-up Date</p>
@@ -322,7 +339,12 @@ export const JobProfileList = ({
                 </div>
               </div>
 
+
+
+{/* in this condition based rendring of the buttons  */}
               <div className="flex flex-col gap-2 ml-6">
+                {profile.status !== "Closed" && (
+                  <>
                 <div className="flex gap-2">
                   <Dialog
                     open={sendProfileDialog === profile._id}
@@ -425,6 +447,9 @@ export const JobProfileList = ({
                 </div>
 
                 <div className="flex gap-2">
+
+
+                  {/* old version */}
                   <Button
                     size="sm"
                     variant="outline"
@@ -433,8 +458,11 @@ export const JobProfileList = ({
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
+                  
 
-                  <Button
+                  {/* old version  */}
+
+                  {/* <Button
                     size="sm"
                     variant="outline"
                     onClick={() => closeJob(profile._id)}
@@ -442,10 +470,63 @@ export const JobProfileList = ({
                   >
                     <X className="h-4 w-4 mr-1" />
                     Close
-                  </Button>
+                  </Button> */}            
+                   
+
+                    {/* updated close button with popup */}
+                    <Dialog
+                      open={confirmCloseJobId === profile._id}
+                      onOpenChange={(open) =>
+                        setConfirmCloseJobId(open ? profile._id : null)
+                      }
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setConfirmCloseJobId(profile._id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Close
+                        </Button>
+                      </DialogTrigger>
+
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Confirm Close</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 text-sm text-gray-600">
+                          Are you sure you want to close this Job? This
+                          action cannot be undone.
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-4">
+                          <Button
+                            variant="outline"
+                            onClick={() => setConfirmCloseJobId(null)}
+                          >
+                            ❌ Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => {
+                              closeJob(profile._id);
+                              setConfirmCloseJobId(null);
+                            }}
+                          >
+                            ✅ Yes, Close
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                   </> )}
                 </div>
+
+  
               </div>
-            </div>
+           
 
             {profile.description && (
               <div className="border-t pt-4">

@@ -90,6 +90,19 @@ export const ProjectLeadList = ({
   const [interviewDate, setInterviewDate] = useState("");
   const [proposalDescription, setProposalDescription] = useState("");
 
+  // confirm the close button feature pop up
+  const [confirmCloseProjectId, setConfirmCloseProjectId] = useState<
+    string | null
+  >(null);
+
+  
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(amount);
+};
+
   const { toast } = useToast();
 
   const getStatusColor = (status: string) => {
@@ -239,7 +252,7 @@ export const ProjectLeadList = ({
       );
       toast({
         title: "Proposal Sent",
-        description: `${selectedCandidate}'s profile has been sent to the client.`,
+        description: `Propsal description is addedd in project profile `,
       });
     } catch (error) {
       console.log("Error updating sent profile to client", error);
@@ -349,9 +362,9 @@ export const ProjectLeadList = ({
                       <p className="font-medium text-gray-900">Budget</p>
                     </div>
                     <div className="flex items-center gap-1 text-green-600">
-                      <span className="text-base font-normal">₹</span>
+                      {/* <span className="text-base font-normal">₹</span> */}
                       <p className="text-base text-gray-900">
-                        {project.clientBudget}
+                        {formatCurrency(project.clientBudget)}
                       </p>
                     </div>
                   </div>
@@ -751,7 +764,7 @@ export const ProjectLeadList = ({
                       Edit
                     </Button>
 
-                    <Button
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() => closeProject(project._id)}
@@ -759,7 +772,55 @@ export const ProjectLeadList = ({
                     >
                       <X className="h-4 w-4 mr-1" />
                       Close
-                    </Button>
+                    </Button> */}
+
+                    {/* updated close button with popup */}
+                    <Dialog
+                      open={confirmCloseProjectId === project._id}
+                      onOpenChange={(open) =>
+                        setConfirmCloseProjectId(open ? project._id : null)
+                      }
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setConfirmCloseProjectId(project._id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Close
+                        </Button>
+                      </DialogTrigger>
+
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Confirm Close</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 text-sm text-gray-600">
+                          Are you sure you want to close this project? This
+                          action cannot be undone.
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-4">
+                          <Button
+                            variant="outline"
+                            onClick={() => setConfirmCloseProjectId(null)}
+                          >
+                            ❌ Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => {
+                              closeProject(project._id);
+                              setConfirmCloseProjectId(null);
+                            }}
+                          >
+                            ✅ Yes, Close
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               )}
