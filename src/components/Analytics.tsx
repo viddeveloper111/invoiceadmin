@@ -22,6 +22,7 @@ import {
   Briefcase,
   DollarSign,
   Calendar,
+  IndianRupee,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -327,7 +328,7 @@ export const Analytics = () => {
                 </p>
               </div>
               <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-600" />
+                <IndianRupee className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>

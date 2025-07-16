@@ -27,6 +27,20 @@ interface PopulatedClientDetails {
 //   _id?: string;
 // }
 
+// chatting
+type ChatMessage = {
+  id: number;
+  message: string;
+  timestamp: string;
+};
+
+interface Followup {
+  id: number;
+  description: string;
+  datetime: string;
+  completed: boolean;
+}
+
 interface ActionDetails {
   inboxType?: "employee" | "candidate";
   employeeId?: string;
@@ -39,7 +53,7 @@ interface ActionDetails {
 
 interface ProjectActionDetails {
   proceedToSendProject?: boolean;
-  interviewDateTime?: string;
+  MeetingDateTime?: string;
   markAsClose?: boolean;
 }
 
@@ -59,7 +73,9 @@ interface ProjectProfile {
   actionDetails?: ActionDetails;
   projectActionDetails?: ProjectActionDetails;
   // sentProfiles?: SentProfile[];
-
+  followups?: Followup[];
+  chatMessages?: ChatMessage[]; // ✅ Add this
+  conversations?: number; // ✅ Add this
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -136,7 +152,7 @@ export const ProjectLeads = () => {
   ).length;
 
   console.log("Active profiles filter:", activeProfiles);
-  const scheduledInterviews = projectProfiles.filter(
+  const scheduledMeetings = projectProfiles.filter(
     (profile) => profile.status === "Meeting Scheduled"
   ).length;
 
@@ -168,7 +184,7 @@ export const ProjectLeads = () => {
   }
 
   console.log("Active profile", activeProfiles);
-  console.log("Schedule interview", scheduledInterviews);
+  console.log("Schedule Meeting", scheduledMeetings);
 
   return (
     <div className="space-y-8 bg-gradient-to-br from-gray-50 to-purple-50 min-h-screen p-6">
@@ -239,7 +255,7 @@ export const ProjectLeads = () => {
                   Scheduled Meeting
                 </p>
                 <p className="text-3xl font-bold text-blue-600">
-                  {scheduledInterviews}
+                  {scheduledMeetings}
                 </p>
               </div>
               <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">

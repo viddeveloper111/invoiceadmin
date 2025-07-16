@@ -15,7 +15,7 @@ interface Client {
   email: string;
   phone: string;
   mobileNo: string;
-  company: [];
+  company: string;
   projectManager: string | null;
   profileImage: string | null;
   serialNo: string;

@@ -39,7 +39,7 @@ interface Client {
   contactPerson: string;
   email: string;
   phone: string;
-  company: [];
+  company: string;
   status: string;
   lastFollowup: string;
   nextFollowup: string;
@@ -96,30 +96,30 @@ export const ClientList = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-green-200 hover:bg-green-100 text-green-800 border-green-200";
       case "Pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 text-yellow-800 border-yellow-200";
       case "Inactive":
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 text-gray-800 border-gray-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 text-gray-800 border-gray-200 ";
     }
   };
 
   const getPaymentColor = (status: string) => {
     switch (status) {
       case "Paid":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+        return "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 text-emerald-800 border-emerald-200";
       case "Pending":
-        return "bg-orange-100 text-orange-800 border-orange-200";
+        return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100 text-orange-800 border-orange-200 ";
       case "Due":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-100 text-red-800 border-red-200 hover:bg-red-100 text-red-800 border-red-200";
       case "Partial":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 text-blue-800 border-blue-200";
       case "Overdue":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-100 text-red-800 border-red-200 hover:bg-red-100 text-red-800 border-red-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 

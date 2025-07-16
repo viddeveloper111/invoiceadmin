@@ -57,7 +57,7 @@ export const JobProfileForm = ({
     //     : editData.skills
     //   : "",
     // new ly so that skills should be at down
-        skills: editData?.skills ?? [],
+    skills: editData?.skills ?? [],
     description: editData?.description || "",
     status: editData ? editData.status : "Active",
     jdFile: editData?.jd || "",
@@ -138,6 +138,15 @@ export const JobProfileForm = ({
       return;
     }
 
+    // Validate Candidate Name
+    if (!formData.candidateName.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "candidateName is required.",
+        variant: "destructive",
+      });
+      return;
+    }
     // Validate follow-up date
     if (!formData.followUpDate) {
       toast({
@@ -168,23 +177,12 @@ export const JobProfileForm = ({
       return;
     }
 
-    // Validate title
-    if (!formData.candidateName.trim()) {
-      toast({
-        title: "⚠️ Missing Field",
-        description: "candidateName is required.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-
     const payload = {
       clientId: selectedClient._id,
       title: formData.title,
       contactPersonName: formData.contactPersonName,
       // skills: formData.skills.split(",").map((skill: string) => skill.trim()),
-       // enter based skill set
+      // enter based skill set
       skills: formData.skills,
       description: formData.description,
       // clientBudget: Number(formData.clientBudget.replace(/[^0-9.-]+/g, "")),
@@ -196,26 +194,28 @@ export const JobProfileForm = ({
         followUpDate: formData.followUpDate,
       },
     };
-
+    console.log("Payload of Job Cration", payload);
     try {
       if (editData) {
         const response = await axios.put(
-          `${baseURL}/updateJobProfile/${editData._id}`,
+          `https://api.vidhema.com/updateJobProfile/${editData._id}`,
           payload
         );
         toast({
           title: "✅ Job Updated",
           description: "The Job  was updated successfully.",
         });
+        console.log("Responde data form backend when edit", response.data);
       } else {
         const response = await axios.post(
-          `${baseURL}/createJobProfile`,
+          `https://api.vidhema.com/createJobProfile`,
           payload
         );
         toast({
           title: "✅ Job Created",
           description: "The new Job  has been created.",
         });
+        console.log("Responde data form backend when created", response.data);
       }
       onSave();
     } catch (error) {

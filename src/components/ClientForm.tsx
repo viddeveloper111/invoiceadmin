@@ -38,7 +38,7 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
     contactPerson: "",
     email: "",
     mobileNo: "",
-    company: [] as string[],
+    company: "",
     status: "Active",
     nextFollowup: "",
     paymentStatus: "Paid",
@@ -121,16 +121,6 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
       });
       return;
     }
-
-    // Validate notes/description
-    if (!formData.notes.trim()) {
-      toast({
-        title: "⚠️ Missing Field",
-        description: "Notes/descritption  is required.",
-        variant: "destructive",
-      });
-      return;
-    }
     // Validate email
     if (!formData.email.trim()) {
       toast({
@@ -150,6 +140,33 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
       });
       return;
     }
+
+    // Validate mobile number
+    if (!formData.mobileNo.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Mobile Number is required.",
+        variant: "destructive",
+      });
+      return;
+    } else if (!/^\d{10}$/.test(formData.mobileNo.trim())) {
+      toast({
+        title: "⚠️ Invalid Format",
+        description: "Mobile Number must be exactly 10 digits.",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Validate company name
+    if (!formData.company.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Company Name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (formData.totalAmount <= 0 || isNaN(formData.totalAmount)) {
       toast({
         title: "⚠️ Invalid Budget",
@@ -164,6 +181,16 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
       toast({
         title: "⚠️ Missing Field",
         description: "Follow-up date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate notes/description
+    if (!formData.notes.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Notes/descritption  is required.",
         variant: "destructive",
       });
       return;
@@ -363,7 +390,7 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                     className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                     placeholder="Company name and industry details"
                   />
-                  
+
                   {/* <div className="flex flex-wrap gap-2 mt-2">
                     {formData.company.map((company, idx) => (
                       <div
@@ -434,7 +461,6 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                       }
                       placeholder="e.g. Rs 80,000"
                       className="h-12 border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-lg"
-                      
                     />
                   </div>
 

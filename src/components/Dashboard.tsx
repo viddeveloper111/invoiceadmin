@@ -210,6 +210,12 @@ export const Dashboard = () => {
     markAsClose?: boolean;
   }
 
+  interface Followup {
+    id: number;
+    description: string;
+    datetime: string;
+    completed: boolean;
+  }
   // Main ProjectProfile interface
   interface ProjectProfile {
     _id: string;
@@ -226,6 +232,7 @@ export const Dashboard = () => {
     actionDetails?: ActionDetails;
     projectActionDetails?: ProjectActionDetails;
     // sentProfiles?: SentProfile[];
+    followups?: Followup[]; // ✅ this line must exist
 
     createdAt: string;
     updatedAt: string;
@@ -283,6 +290,35 @@ export const Dashboard = () => {
   // getting the env data of the api
 
   const baseURL = import.meta.env.VITE_API_URL;
+
+  // top job value on the based on followups based
+
+  const getTopFollowupDateForJob = (job: any): string | null => {
+    const now = Date.now();
+
+    // Step 1: Check future followups in the array
+    const futureFollowups = (job.followups || [])
+      .filter((f: any) => !f.completed && new Date(f.datetime).getTime() > now)
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+      );
+
+    if (futureFollowups.length > 0) {
+      return futureFollowups[0].datetime;
+    }
+
+    // Step 2: Fallback to actionDetails followUpDate
+    if (
+      job.actionDetails?.followUpDate &&
+      new Date(job.actionDetails.followUpDate).getTime() > now
+    ) {
+      return job.actionDetails.followUpDate;
+    }
+
+    return null;
+  };
+
   const getJobsData = async () => {
     try {
       const response = await axios.get(`${baseURL}/getAllJobProfiles`);
@@ -297,12 +333,27 @@ export const Dashboard = () => {
       setActiveJobProfile(activeJob);
 
       const AllJobsData = [...response.data];
-      const newJob = AllJobsData.sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
 
-        return dateB - dateA; //latest create value
+      // new
+
+      const safeGetTime = (dateStr?: string): number => {
+        if (!dateStr) return 0;
+        const time = new Date(dateStr).getTime();
+        return isNaN(time) ? 0 : time;
+      };
+
+      const newJob = AllJobsData.sort((a, b) => {
+        return safeGetTime(b.createdAt) - safeGetTime(a.createdAt);
       })[0];
+
+
+      // old
+      // const newJob = AllJobsData.sort((a, b) => {
+      //   const dateA = new Date(a.createdAt).getTime();
+      //   const dateB = new Date(b.createdAt).getTime();
+
+      //   return dateB - dateA; //latest create value
+      // })[0];
 
       setNewJobCreated(newJob);
 
@@ -345,6 +396,19 @@ export const Dashboard = () => {
     }
   };
 
+  // top client value on the based on followups based
+  const getTopFollowupFromClient = (client: Client) => {
+    const now = Date.now();
+    return (
+      (client.followups || [])
+        .filter((f) => !f.completed && new Date(f.datetime).getTime() > now)
+        .sort(
+          (a, b) =>
+            new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+        )[0] || null
+    );
+  };
+
   const getClientData = async () => {
     try {
       const response = await axios.get(`${baseURL}/clients`);
@@ -380,11 +444,23 @@ export const Dashboard = () => {
 
       // getting the newly created single client with sorting on the basis of creation
       const AllClientData = [...response.data];
-      const newClient = AllClientData.sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
+      // const newClient = AllClientData.sort((a, b) => {
+      //   const dateA = new Date(a.createdAt).getTime();
+      //   const dateB = new Date(b.createdAt).getTime();
 
-        return dateB - dateA; //latest create value
+      //   return dateB - dateA; //latest create value
+      // })[0];
+
+
+      // new
+      const safeGetTime = (dateStr?: string): number => {
+        if (!dateStr) return 0;
+        const time = new Date(dateStr).getTime();
+        return isNaN(time) ? 0 : time;
+      };
+
+      const newClient = AllClientData.sort((a, b) => {
+        return safeGetTime(b.createdAt) - safeGetTime(a.createdAt);
       })[0];
 
       setNewClientCreated(newClient);
@@ -436,6 +512,28 @@ export const Dashboard = () => {
     }
   };
 
+  // new date top finding update of project
+  const getTopFollowupDate = (project: ProjectProfile): string | null => {
+    const now = new Date().getTime();
+
+    // Step 1: Filter out only future followups
+    const futureFollowups = (project.followups || []).filter((fu) => {
+      return new Date(fu.datetime).getTime() > now;
+    });
+
+    // Step 2: Sort and get the earliest future followup
+    const sorted = futureFollowups.sort(
+      (a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+
+    if (sorted.length > 0) {
+      return sorted[0].datetime;
+    }
+
+    // Step 3: Fallback to actionDetails.followUpDate if no future followups
+    return project.actionDetails?.followUpDate || null;
+  };
+
   // get the projects data
   const getProjectData = async () => {
     try {
@@ -451,11 +549,22 @@ export const Dashboard = () => {
       setActiveProjectsValue(activeProject);
 
       const AllProjectsData = [...response.data];
-      const newJob = AllProjectsData.sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
+      // const newJob = AllProjectsData.sort((a, b) => {
+      //   const dateA = new Date(a.createdAt).getTime();
+      //   const dateB = new Date(b.createdAt).getTime();
 
-        return dateB - dateA; //latest create value
+      //   return dateB - dateA; //latest create value
+      // })[0];
+
+      // new
+      const safeGetTime = (dateStr?: string): number => {
+        if (!dateStr) return 0;
+        const time = new Date(dateStr).getTime();
+        return isNaN(time) ? 0 : time;
+      };
+
+      const newJob = AllProjectsData.sort((a, b) => {
+        return safeGetTime(b.createdAt) - safeGetTime(a.createdAt);
       })[0];
 
       setNewProjectCreated(newJob);
@@ -466,16 +575,30 @@ export const Dashboard = () => {
       // Filter jobs with upcoming followups
       // And prepare an array of { job, followupDate } objects
       // Find upcoming followups
-      const futureFollowups = AllProjectsData.filter(
-        (project) => project.actionDetails?.followUpDate
-      )
-        .map((project) => {
-          const followupTime = new Date(
-            project.actionDetails.followUpDate
-          ).getTime();
-          return { project, followupTime };
-        })
-        .filter((item) => item.followupTime > now);
+      // const futureFollowups = AllProjectsData.filter(
+      //   (project) => project.actionDetails?.followUpDate
+      // )
+      //   .map((project) => {
+      //     const followupTime = new Date(
+      //       project.actionDetails.followUpDate
+      //     ).getTime();
+      //     return { project, followupTime };
+      //   })
+      //   .filter((item) => item.followupTime > now);
+
+      // new update Project Followups
+
+      const futureFollowups = AllProjectsData.map((project) => {
+        const followupDate = getTopFollowupDate(project); // string | null
+        const followupTime = followupDate
+          ? new Date(followupDate).getTime()
+          : null;
+
+        return followupTime ? { project, followupTime } : null;
+      }).filter(
+        (item): item is { project: ProjectProfile; followupTime: number } =>
+          item !== null
+      );
 
       console.log("🟢 Future Projects  Followups:", futureFollowups);
 
@@ -505,7 +628,8 @@ export const Dashboard = () => {
   console.log("This is the clientData getting in dashoboard page", clientValue);
   console.log("This is the TotalClient in dashoboard page", totalClients);
 
-  const formatFollowupDate = (datetime: string) => {
+  const formatFollowupDate = (datetime: string, showFullDate = false) => {
+    const date = new Date(datetime);
     const followupDate = new Date(datetime);
     const now = new Date();
 
@@ -526,16 +650,30 @@ export const Dashboard = () => {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Asia/Kolkata", // or your desired timezone
     });
 
     if (isToday) return `Today, ${time}`;
     if (isTomorrow) return `Tomorrow, ${time}`;
 
+    if (showFullDate) {
+      const fullDate = date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      });
+      return `${fullDate}, ${time}`;
+    }
+
     return `${followupDate.toLocaleDateString()} ${time}`;
   };
 
   // for the time and create latest time
-  const formatTimeWithTodayTomorrow = (datetime: string) => {
+  const formatTimeWithTodayTomorrow = (
+    datetime: string,
+    showFullDate = false
+  ) => {
     const date = new Date(datetime);
     const now = new Date();
 
@@ -556,10 +694,20 @@ export const Dashboard = () => {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Asia/Kolkata", // or your desired timezone
     });
 
     if (isToday) return `Today, ${time}`;
     if (isTomorrow) return `Tomorrow, ${time}`;
+    if (showFullDate) {
+      const fullDate = date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      });
+      return `${fullDate}, ${time}`;
+    }
 
     return time;
   };
@@ -707,7 +855,7 @@ export const Dashboard = () => {
                             } added to system`}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {newClientCreated
+                            {newClientCreated?.createdAt
                               ? formatTimeWithTodayTomorrow(
                                   newClientCreated.createdAt
                                 )
@@ -725,7 +873,7 @@ export const Dashboard = () => {
                             } position created`}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {newJobCreated
+                            {newJobCreated?.createdAt
                               ? formatTimeWithTodayTomorrow(
                                   newJobCreated.createdAt
                                 )
@@ -743,9 +891,9 @@ export const Dashboard = () => {
                             } Project created`}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {newJobCreated
+                            {newProjectCreated?.createdAt
                               ? formatTimeWithTodayTomorrow(
-                                  newJobCreated.createdAt
+                                  newProjectCreated.createdAt
                                 )
                               : ""}
                           </p>
@@ -774,9 +922,11 @@ export const Dashboard = () => {
                             } `}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {newClientCreated
+                            {nextFollowupClient &&
+                            getTopFollowupFromClient(nextFollowupClient)
                               ? formatTimeWithTodayTomorrow(
-                                  newClientCreated.createdAt
+                                  getTopFollowupFromClient(nextFollowupClient)!
+                                    .datetime
                                 )
                               : ""}
                           </p>
@@ -793,9 +943,10 @@ export const Dashboard = () => {
                             } `}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {newClientCreated
+                            {nextFollowupProjects &&
+                            getTopFollowupDate(nextFollowupProjects)
                               ? formatTimeWithTodayTomorrow(
-                                  newClientCreated.createdAt
+                                  getTopFollowupDate(nextFollowupProjects)!
                                 )
                               : ""}
                           </p>
@@ -810,12 +961,13 @@ export const Dashboard = () => {
                               nextFollowupJobs?.title || activity.description
                             } `}
                           </p>
-                          <p className="text-sm text-gray-600 truncate">
-                            {nextFollowupClient?.followups?.length > 0
-                              ? formatFollowupDate(
-                                  nextFollowupClient.followups[0].datetime
+                          <p className="text-xs text-gray-600 truncate">
+                            {nextFollowupJobs &&
+                            getTopFollowupDateForJob(nextFollowupJobs)
+                              ? formatTimeWithTodayTomorrow(
+                                  getTopFollowupDateForJob(nextFollowupJobs)!
                                 )
-                              : "No followup date"}
+                              : ""}
                           </p>
                         </div>
                       )}
@@ -867,20 +1019,23 @@ export const Dashboard = () => {
             </div> */}
 
             <div className="space-y-4">
-              {newupcomingFollowups.length >0 ? (newupcomingFollowups.map(({ client, followup }, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{client.name}</p>
-                    <p className="text-sm text-gray-600">
-                      {formatFollowupDate(followup.datetime)}
-                    </p>
-                  </div>
+              {newupcomingFollowups.length > 0 ? (
+                newupcomingFollowups.map(({ client, followup }, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">
+                        {client.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatFollowupDate(followup.datetime)}
+                      </p>
+                    </div>
 
-                  {/* taki followup and low and high nhi dikh */}
-                  {/* <div className="flex items-center gap-2">
+                    {/* taki followup and low and high nhi dikh */}
+                    {/* <div className="flex items-center gap-2">
                     <span
                       className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(
                         followup.priority || "low"
@@ -892,13 +1047,14 @@ export const Dashboard = () => {
                       {followup.type || "Follow-up"}
                     </span>
                   </div> */}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-600 text-sm py-6">
+                  🚫 No upcoming follow-ups In Clients. Please Add Your Upcomig
+                  FollowUps
                 </div>
-              ))
-            ):(
-              <div className="text-center text-gray-600 text-sm py-6">
-                  🚫 No upcoming follow-ups In Clients. Please Add Your Upcomig FollowUps 
-                </div>
-            )}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -972,7 +1128,8 @@ export const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center text-gray-600 text-sm py-6">
-                  🚫 No upcoming follow-ups In Jobs. Please Add Your Upcomig FollowUps 
+                  🚫 No upcoming follow-ups In Jobs. Please Add Your Upcomig
+                  FollowUps
                 </div>
               )}
             </div>
@@ -1017,22 +1174,25 @@ export const Dashboard = () => {
             </div> */}
 
             <div className="space-y-4">
-              {newupcomingFollowupsProjects.length >0 ? (newupcomingFollowupsProjects.map(
-                ({ project, followup }, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">
-                        {project.title || "Job Title"}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {formatFollowupDate(project.actionDetails.followUpDate)}
-                      </p>
-                    </div>
-                    {/* same followup and high nhi dikh */}
-                    {/* <div className="flex items-center gap-2">
+              {newupcomingFollowupsProjects.length > 0 ? (
+                newupcomingFollowupsProjects.map(
+                  ({ project, followup }, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">
+                          {project.title || "Job Title"}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {formatFollowupDate(
+                            project.actionDetails.followUpDate
+                          )}
+                        </p>
+                      </div>
+                      {/* same followup and high nhi dikh */}
+                      {/* <div className="flex items-center gap-2">
                     <span
                       className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(
                         followup.priority || "low"
@@ -1044,14 +1204,15 @@ export const Dashboard = () => {
                       {followup.type || "Follow-up"}
                     </span>
                   </div> */}
-                  </div>
+                    </div>
+                  )
                 )
-              )
-            ):(
-               <div className="text-center text-gray-600 text-sm py-6">
-                  🚫 No upcoming follow-ups In Projects. Please Add Your Upcomig FollowUps 
+              ) : (
+                <div className="text-center text-gray-600 text-sm py-6">
+                  🚫 No upcoming follow-ups In Projects. Please Add Your Upcomig
+                  FollowUps
                 </div>
-            )}
+              )}
             </div>
           </CardContent>
         </Card>

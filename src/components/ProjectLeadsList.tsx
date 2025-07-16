@@ -13,9 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageCircle } from "lucide-react";
 
 interface PopulatedClientDetails {
   _id: string;
@@ -28,6 +31,19 @@ interface PopulatedClientDetails {
 //   _id?: string;
 // }
 
+interface Followup {
+  id: number;
+  description: string;
+  datetime: string;
+  completed: boolean;
+}
+// chatting
+type ChatMessage = {
+  id: number;
+  message: string;
+  timestamp: string;
+};
+
 interface ActionDetails {
   inboxType?: "employee" | "candidate";
   employeeId?: string;
@@ -39,9 +55,9 @@ interface ActionDetails {
   followUpDate?: string;
 }
 
-interface InterviewActionDetails {
-  proceedToInterview?: boolean;
-  interviewDateTime?: string;
+interface MeetingActionDetails {
+  proceedToMeeting?: boolean;
+  MeetingDateTime?: string;
   markAsClose?: boolean;
 }
 
@@ -58,8 +74,11 @@ interface ProjectProfile {
   jd?: string;
   proposalDescription: string;
   actionDetails?: ActionDetails;
-  interviewActionDetails?: InterviewActionDetails;
+  MeetingActionDetails?: MeetingActionDetails;
   // sentProfiles?: SentProfile[];
+  followups?: Followup[];
+  chatMessages?: ChatMessage[]; // ✅ Add this
+  conversations?: number; // ✅ Add this
 
   createdAt: string;
   updatedAt: string;
@@ -84,10 +103,8 @@ export const ProjectLeadList = ({
   );
   const [selectedCandidate, setSelectedCandidate] = useState("");
   const [sendDateTime, setSendDateTime] = useState("");
-  const [scheduleInterview, setScheduleInterview] = useState<string | null>(
-    null
-  );
-  const [interviewDate, setInterviewDate] = useState("");
+  const [scheduleMeeting, setScheduleMeeting] = useState<string | null>(null);
+  const [MeetingDate, setMeetingDate] = useState("");
   const [proposalDescription, setProposalDescription] = useState("");
 
   // confirm the close button feature pop up
@@ -95,32 +112,115 @@ export const ProjectLeadList = ({
     string | null
   >(null);
 
-  
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(amount);
-};
+  // followup description
+  const [sendFollowUpDialog, setSendFollowUpDialog] = useState<string | null>(
+    null
+  );
+  const [activeTab, setActiveTab] = useState<"new" | "history">("new");
+  const [followupData, setFollowupData] = useState({
+    description: "",
+    datetime: "",
+  });
+
+  // for chat Purpose
+  const [newMessage, setNewMessage] = useState("");
+  const [chatProject, setChatProject] = useState<string | null>(null);
+
+  // message ko group kerne ke liye
+  const groupMessagesByDate = (
+    messages: ChatMessage[]
+  ): Record<string, ChatMessage[]> => {
+    const grouped: Record<string, ChatMessage[]> = {};
+    messages.forEach((msg) => {
+      const date = new Date(msg.timestamp).toDateString();
+      if (!grouped[date]) grouped[date] = [];
+      grouped[date].push(msg);
+    });
+    return grouped;
+  };
+
+  // chats ke liye
+  const addChatMessage = async (e: React.FormEvent, projectId: string) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    const project = projects.find((p) => p._id === projectId);
+    if (!project) return;
+
+    const newMsg = {
+      id: Date.now(),
+      message: newMessage,
+      timestamp: new Date().toISOString(),
+    };
+
+    const updatedChat = [...(project.chatMessages || []), newMsg];
+
+    try {
+      const res = await axios.put(
+        `https://api.vidhema.com/projects/${projectId}`,
+        {
+          chatMessages: updatedChat,
+          conversations: (project.conversations || 0) + 1,
+        }
+      );
+
+      // Update state
+      onUpdate(
+        projects.map((proj) => (proj._id === projectId ? res.data : proj))
+      );
+
+      setNewMessage("");
+    } catch (err) {
+      console.error("Chat message update failed:", err);
+      alert("Failed to send message");
+    }
+  };
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
+  };
 
   const { toast } = useToast();
 
-  const getStatusColor = (status: string) => {
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case "Active":
+  //       return "bg-green-100 text-green-800";
+  //     case "Lead Sent":
+  //       return "bg-blue-100 text-blue-800";
+  //     case "Meeting Scheduled":
+  //       return "bg-purple-100 text-purple-800";
+  //     case "Closed":
+  //       return "bg-gray-100 text-gray-800";
+  //     case "On Hold":
+  //       return "bg-yellow-100 text-yellow-800";
+  //     default:
+  //       return "bg-gray-100 text-gray-800";
+  //   }
+  // };
+
+  // new get status
+  function getStatusColor(status: string): string {
     switch (status) {
       case "Active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-500 text-white hover:bg-green-500 hover:text-white";
+      case "Pending":
       case "Lead Sent":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100 text-blue-80";
       case "Meeting Scheduled":
-        return "bg-purple-100 text-purple-800";
+        return "bg-purple-100 text-purple-800 hover:bg-purple-100 text-purple-800";
       case "Closed":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100 text-gray-800";
       case "On Hold":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 hover: bg-yellow-100 text-yellow-800";
+
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100 text-gray-800";
     }
-  };
+  }
+
   // getting the env data of the api
 
   const baseURL = import.meta.env.VITE_API_URL;
@@ -263,8 +363,82 @@ const formatCurrency = (amount: number) => {
       });
     }
   };
-  const scheduleInterviewForProject = async (id: string) => {
-    if (!interviewDate) {
+
+  const sentTheFollowup = async (
+    projectId: string,
+    data: { description: string; datetime: string }
+  ) => {
+    if (!data.description || !data.datetime) {
+      toast({
+        title: "Missing Fields",
+        description: "Please enter both Followup description and send date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log("Sending followup for project:", projectId);
+      console.log("Followup Description:", data.description);
+      console.log("Send DateTime:", data.datetime);
+
+      const existingProject = await axios.get(
+        `https://api.vidhema.com/projects/${projectId}`
+      );
+
+      const existingTeamName =
+        existingProject.data?.actionDetails?.teamName || [];
+      const existingFollowups = existingProject.data?.followups || [];
+
+      const newFollowup = {
+        id: Date.now(),
+        description: data.description,
+        datetime: data.datetime,
+        completed: false,
+      };
+
+      const updatedFollowups = [...existingFollowups, newFollowup];
+
+      const payload = {
+        followups: updatedFollowups,
+        actionDetails: {
+          followUpDate: data.datetime,
+          teamName: existingTeamName,
+        },
+      };
+
+      console.log("Payload to update:", payload);
+
+      const result = await axios.put(
+        `https://api.vidhema.com/projects/${projectId}`,
+        payload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("Response from PUT:", result.data);
+
+      const response = await axios.get(`https://api.vidhema.com/projects`);
+      onUpdate(response.data);
+
+      setSendFollowUpDialog(null); // <- updated to match your new state
+      setFollowupData({ description: "", datetime: "" });
+
+      toast({
+        title: "Follow Up Added",
+        description: `Followup description is addedd in project profile `,
+      });
+    } catch (error) {
+      console.error("Error updating followup:", error);
+      toast({
+        title: "Failed to Add the Followup",
+        description: "There was an issue Adding the Followp. Try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const scheduleMeetingForProject = async (id: string) => {
+    if (!MeetingDate) {
       toast({
         title: "Missing Date",
         description: "Please select a meeting date and time.",
@@ -276,8 +450,8 @@ const formatCurrency = (amount: number) => {
       await axios.put(
         `https://api.vidhema.com/projects/${id}`,
         {
-          "interviewActionDetails.interviewDateTime": interviewDate,
-          "interviewActionDetails.proceedToInterview": true,
+          "MeetingActionDetails.MeetingDateTime": MeetingDate,
+          "MeetingActionDetails.proceedToMeeting": true,
           status: "Meeting Scheduled",
         },
         { headers: { "Content-Type": "application/json" } }
@@ -285,8 +459,8 @@ const formatCurrency = (amount: number) => {
       // Fetch the latest profiles from the backend
       const response = await axios.get(`https://api.vidhema.com/projects`);
       onUpdate(response.data);
-      setScheduleInterview(null);
-      setInterviewDate("");
+      setScheduleMeeting(null);
+      setMeetingDate("");
       console.log(
         "This is project latest data through backend projectlead list page",
         response.data
@@ -296,7 +470,7 @@ const formatCurrency = (amount: number) => {
         description: "The meeting has been successfully scheduled.",
       });
     } catch (error) {
-      console.error("Error updating schedule interview:", error);
+      console.error("Error updating schedule Meeting:", error);
       toast({
         title: "Schedule Failed",
         description: "There was an error scheduling the meeting.",
@@ -486,14 +660,14 @@ const formatCurrency = (amount: number) => {
                       </div>
                     )}
 
-                  {project.interviewActionDetails?.interviewDateTime && (
+                  {project.MeetingActionDetails?.MeetingDateTime && (
                     <div>
                       <p className="font-medium text-gray-900">
                         Meeting Date & Time
                       </p>
                       <p className="text-green-600 font-semibold">
                         {new Date(
-                          project.interviewActionDetails.interviewDateTime
+                          project.MeetingActionDetails.MeetingDateTime
                         ).toLocaleDateString()}
                       </p>
                     </div>
@@ -703,12 +877,214 @@ const formatCurrency = (amount: number) => {
                       </DialogContent>
                     </Dialog>
 
-                    {/* Schedule Interview Button (if Lead Sent) */}
+                    {/* followup dialog Button contain followup detail  */}
+
+                    <Dialog
+                      open={sendFollowUpDialog === project._id}
+                      onOpenChange={(open) => {
+                        setSendFollowUpDialog(open ? project._id : null);
+                        setActiveTab("new"); // Reset tab when dialog opens
+                      }}
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline" // add this to get outline style
+                          className="border-green-200 text-green-700 hover:bg-green-50" // green outline and text
+                          onClick={() => {
+                            setSendFollowUpDialog(project._id);
+                            setFollowupData({ description: "", datetime: "" });
+                          }}
+                        >
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Followup
+                        </Button>
+                      </DialogTrigger>
+
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="text-xl font-bold text-gray-900">
+                            Follow-up Management
+                          </DialogTitle>
+                          <DialogDescription>
+                            View history or add a new follow-up entry.
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        {/* Tab buttons */}
+                        <div className="flex gap-2 my-4">
+                          <Button
+                            variant={
+                              activeTab === "new" ? "default" : "outline"
+                            }
+                            onClick={() => setActiveTab("new")}
+                          >
+                            Add New
+                          </Button>
+                          <Button
+                            variant={
+                              activeTab === "history" ? "default" : "outline"
+                            }
+                            onClick={() => setActiveTab("history")}
+                          >
+                            History
+                          </Button>
+                        </div>
+
+                        {/* Conditional tab content */}
+                        {activeTab === "new" ? (
+                          <div className="space-y-4">
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700">
+                                Follow-up Description
+                              </Label>
+                              <Textarea
+                                value={followupData.description}
+                                onChange={(e) =>
+                                  setFollowupData((prev) => ({
+                                    ...prev,
+                                    description: e.target.value,
+                                  }))
+                                }
+                                placeholder="Describe the purpose of this follow-up..."
+                                className="mt-1 min-h-[80px]"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700">
+                                Date & Time
+                              </Label>
+                              <Input
+                                type="datetime-local"
+                                value={followupData.datetime}
+                                onChange={(e) =>
+                                  setFollowupData((prev) => ({
+                                    ...prev,
+                                    datetime: e.target.value,
+                                  }))
+                                }
+                                className="mt-1"
+                              />
+                            </div>
+                            <Button
+                              onClick={() =>
+                                sentTheFollowup(project._id, followupData)
+                              }
+                              className="w-full bg-blue-600 hover:bg-blue-700"
+                            >
+                              Schedule Follow-up
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                            {project.followups &&
+                            project.followups.length > 0 ? (
+                              project.followups.map((fu, index) => (
+                                <div
+                                  key={index}
+                                  className="border rounded-md p-3 text-sm text-gray-700 bg-gray-50"
+                                >
+                                  <p className="font-medium">
+                                    {fu.description}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(fu.datetime).toLocaleString()}
+                                  </p>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-sm text-gray-500">
+                                No follow-up history yet.
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Chat Conversation ke liye */}
+                    <Dialog
+                      open={chatProject === project._id}
+                      onOpenChange={(open) =>
+                        setChatProject(open ? project._id : null)
+                      }
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                          onClick={() => setChatProject(project._id)}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" />
+                          Chat ({project.conversations || 0})
+                        </Button>
+                      </DialogTrigger>
+
+                      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+                        <DialogHeader>
+                          <DialogTitle className="text-xl font-bold text-gray-900">
+                            Chat - {project.title}
+                          </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="flex-1 overflow-y-auto bg-gray-50 border p-4 rounded-md space-y-4">
+                          {project.chatMessages?.length ? (
+                            Object.entries(
+                              groupMessagesByDate(project.chatMessages)
+                            ).map(([date, messages]) => (
+                              <div key={date}>
+                                <div className="text-center text-xs font-semibold text-blue-600 mb-2">
+                                  {date}
+                                </div>
+                                {messages.map((msg) => (
+                                  <div
+                                    key={msg.id}
+                                    className="bg-white shadow p-3 rounded border-l-4 border-blue-400"
+                                  >
+                                    <p>{msg.message}</p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {new Date(
+                                        msg.timestamp
+                                      ).toLocaleTimeString()}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-500 text-center py-4">
+                              No messages yet
+                            </p>
+                          )}
+                        </div>
+
+                        <form
+                          onSubmit={(e) => addChatMessage(e, project._id)}
+                          className="mt-4 flex gap-2"
+                        >
+                          <Input
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Type your message"
+                            className="flex-1"
+                          />
+                          <Button
+                            type="submit"
+                            className="bg-purple-600 hover:bg-purple-700"
+                          >
+                            Send
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+
+                    {/* Schedule Meeting Button (if Lead Sent) */}
                     {project.status === "Lead Sent" && (
                       <Dialog
-                        open={scheduleInterview === project._id}
+                        open={scheduleMeeting === project._id}
                         onOpenChange={(open) =>
-                          setScheduleInterview(open ? project._id : null)
+                          setScheduleMeeting(open ? project._id : null)
                         }
                       >
                         <DialogTrigger asChild>
@@ -716,8 +1092,8 @@ const formatCurrency = (amount: number) => {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setScheduleInterview(project._id);
-                              setInterviewDate("");
+                              setScheduleMeeting(project._id);
+                              setMeetingDate("");
                             }}
                           >
                             <Calendar className="h-4 w-4 mr-1" />
@@ -733,15 +1109,13 @@ const formatCurrency = (amount: number) => {
                               <Label>Meeting Date & Time</Label>
                               <Input
                                 type="datetime-local"
-                                value={interviewDate}
-                                onChange={(e) =>
-                                  setInterviewDate(e.target.value)
-                                }
+                                value={MeetingDate}
+                                onChange={(e) => setMeetingDate(e.target.value)}
                               />
                             </div>
                             <Button
                               onClick={() =>
-                                scheduleInterviewForProject(project._id)
+                                scheduleMeetingForProject(project._id)
                               }
                               className="w-full"
                             >

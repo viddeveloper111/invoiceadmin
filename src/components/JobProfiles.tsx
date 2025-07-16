@@ -185,7 +185,7 @@ export const JobProfiles = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Total Profiles
+                  Total Job Profiles
                 </p>
                 <p className="text-3xl font-bold text-gray-900">
                   {jobProfiles.length}
@@ -203,7 +203,7 @@ export const JobProfiles = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Active Profiles
+                  Active Job Profiles
                 </p>
                 <p className="text-3xl font-bold text-green-600">
                   {activeProfiles}
