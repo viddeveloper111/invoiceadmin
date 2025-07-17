@@ -260,7 +260,7 @@ export const ProjectLeadForm = ({
         });
       } else {
         const response = await axios.post(
-          `http://localhost:3006/projects`,
+          `https://api.vidhema.com/projects`,
           payload
         );
         toast({
