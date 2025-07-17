@@ -9,6 +9,7 @@ import {
   Clock,
   CheckCircle,
   UserCheck,
+  IndianRupee
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -38,7 +39,7 @@ export const Dashboard = () => {
     {
       title: "Payment Reminders",
       value: "5",
-      icon: DollarSign,
+      icon: IndianRupee,
       color: "text-red-600",
       bgColor: "bg-red-100",
     },
@@ -91,7 +92,7 @@ export const Dashboard = () => {
       type: "Payment",
       description: "Payment reminder sent to XYZ Ltd",
       time: "8 hours ago",
-      icon: DollarSign,
+      icon: IndianRupee,
       color: "bg-red-500",
     },
   ];
