@@ -211,6 +211,7 @@ export const JobProfileForm = ({
           `https://api.vidhema.com/createJobProfile`,
           payload
         );
+        console.log("Edit time Payload", payload);
         toast({
           title: "✅ Job Created",
           description: "The new Job  has been created.",
@@ -390,7 +391,7 @@ export const JobProfileForm = ({
                     </Label>
                     <Input
                       id="followUpDate"
-                      type="date"
+                      type="datetime-local"
                       value={formData.followUpDate}
                       onChange={(e) =>
                         handleChange("followUpDate", e.target.value)

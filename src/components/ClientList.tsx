@@ -128,46 +128,9 @@ export const ClientList = ({
   const baseURL = import.meta.env.VITE_API_URL;
 
   //  old api `https://api.vidhema.com/clients/${id}`,
-    const validateClientUpdate = (updates: Partial<Client>) => {
-  if (!updates.name || updates.name.trim() === "") {
-    return "Name is required.";
-  }
-  if (!updates.contactPerson || updates.contactPerson.trim() === "") {
-    return "Contact Person is required.";
-  }
-  if (!updates.email || updates.email.trim() === "") {
-    return "Email is required.";
-  }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(updates.email)) {
-    return "Invalid email address.";
-  }
-
-  // Phone validation
-  if (!updates.phone || updates.phone.trim() === "") {
-    return "Phone number is required.";
-  }
-  // Allow only digits, spaces, dashes, parentheses, plus sign
-  const phoneRegex = /^[+\d\s\-()]{7,15}$/;
-  if (!phoneRegex.test(updates.phone)) {
-    return "Invalid phone number format.";
-  }
-
-  return null;
-};
 
   const updateClient = async (id: string, updates: Partial<Client>) => {
     try {
-      // Validate before sending
-    const validationError = validateClientUpdate(updates);
-    if (validationError) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: validationError,
-      });
-      return false; // stop here, don't update
-    }
       const updatePayload = {
         ...updates,
       };
@@ -189,7 +152,6 @@ export const ClientList = ({
               title: "✅ Client Updated",
               description: "The  Client  has been Updated.",
             });
-             return true
     } catch (error) {
       console.log("thiere is error in updating", error);
        toast({
@@ -199,22 +161,14 @@ export const ClientList = ({
                 error?.response?.data?.message ||
                 "Failed to Update  the Client . Please try again.",
             });
-             return false
     }
   };
-
-
-
   console.log("saving client", editingClient, editFormData);
   console.log("Follow Up  client", followUps, followupData);
 
-  const saveEdit =async (e) => {
+  const saveEdit = (e) => {
     e.preventDefault();
-
-    if (!editingClient) return;
-
-    const success = await updateClient(editingClient, editFormData);
-    if (success) {
+    if (editingClient) {
       updateClient(editingClient, editFormData);
       setEditingClient(null);
       setEditFormData({});
@@ -222,42 +176,8 @@ export const ClientList = ({
     }
   };
 
-
-  // followup validation 
-  const validateFollowupData = (data: { description: string; datetime: string }): string | null => {
-  if (!data.description || data.description.trim() === "") {
-    return "Description is required.";
-  }
-
-  if (!data.datetime || data.datetime.trim() === "") {
-    return "Date and time are required.";
-  }
-
-  const followupDate = new Date(data.datetime);
-  const now = new Date();
-
-  if (isNaN(followupDate.getTime())) {
-    return "Invalid date format.";
-  }
-
-  if (followupDate.getTime() < now.getTime()) {
-    return "Follow-up time must be in the future.";
-  }
-
-  return null;
-};
-
   const addFollowup = (e, clientId: string) => {
     e.preventDefault();
-     const validationError = validateFollowupData(followupData);
-  if (validationError) {
-    toast({
-      variant: "destructive",
-      title: "Validation Error",
-      description: validationError,
-    });
-    return;
-  }
     const client = clients.find((c) => c.id === clientId);
     if (client && followupData.description && followupData.datetime) {
       const newFollowup = {

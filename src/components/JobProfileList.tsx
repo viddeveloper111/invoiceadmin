@@ -118,8 +118,10 @@ export const JobProfileList = ({
 
   const updateFollowupDate = async (id: string) => {
     try {
+      console.log("Udate newFollowupDate", newFollowupDate);
       await axios.put(
-        `${baseURL}/updateJobProfile/${id}`,
+        // `${baseURL}/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         {
           "actionDetails.followUpDate": newFollowupDate,
         },
@@ -131,19 +133,19 @@ export const JobProfileList = ({
       onUpdate(response.data);
       setEditingFollowup(null);
       setNewFollowupDate("");
-        toast({
-                    title: "✅ Job is Updated",
-                    description: "The  Job  has been Updated.",
-                  });
+      toast({
+        title: "✅ Job is Updated",
+        description: "The  Job  has been Updated.",
+      });
     } catch (error) {
       console.log("Error updating Followup Date", error);
-       toast({
-                    variant: "destructive",
-                    title: "❌ Error",
-                    description:
-                      error?.response?.data?.message ||
-                      "Failed to Update  the Job . Please try again.",
-                  });
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to Update  the Job . Please try again.",
+      });
     }
   };
 
@@ -151,7 +153,7 @@ export const JobProfileList = ({
     if (!selectedCandidate || !sendDateTime) return;
     try {
       await axios.put(
-        `${baseURL}/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         {
           status: "Profile Sent",
           "actionDetails.markAsSend": true,
@@ -176,7 +178,7 @@ export const JobProfileList = ({
     if (!interviewDate) return;
     try {
       await axios.put(
-        `${baseURL}/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         {
           "interviewActionDetails.interviewDateTime": interviewDate,
           "interviewActionDetails.proceedToInterview": true,
@@ -185,7 +187,9 @@ export const JobProfileList = ({
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`${baseURL}/getAllJobProfiles`);
+      const response = await axios.get(
+        `https://api.vidhema.com/getAllJobProfiles`
+      );
       onUpdate(response.data);
       setScheduleInterview(null);
       setInterviewDate("");
@@ -197,13 +201,15 @@ export const JobProfileList = ({
   const closeJob = async (id: string) => {
     try {
       await axios.put(
-        `${baseURL}/updateJobProfile/${id}`,
+        `https://api.vidhema.com/updateJobProfile/${id}`,
         { status: "Closed" },
         { headers: { "Content-Type": "application/json" } }
       );
 
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`${baseURL}/getAllJobProfiles`);
+      const response = await axios.get(
+        `https://api.vidhema.com/getAllJobProfiles`
+      );
       onUpdate(response.data); // Update UI with fresh data
       console.log("Job status updated to Closed");
     } catch (error) {
@@ -243,7 +249,7 @@ export const JobProfileList = ({
                       {editingFollowup === profile._id ? (
                         <div className="flex gap-1">
                           <Input
-                            type="date"
+                            type="datetime-local"
                             value={newFollowupDate}
                             onChange={(e) => setNewFollowupDate(e.target.value)}
                             className="h-8 text-xs"
@@ -339,130 +345,129 @@ export const JobProfileList = ({
                 </div>
               </div>
 
-
-
-{/* in this condition based rendring of the buttons  */}
+              {/* in this condition based rendring of the buttons  */}
               <div className="flex flex-col gap-2 ml-6">
                 {profile.status !== "Closed" && (
                   <>
-                <div className="flex gap-2">
-                  <Dialog
-                    open={sendProfileDialog === profile._id}
-                    onOpenChange={(open) =>
-                      setSendProfileDialog(open ? profile._id : null)
-                    }
-                  >
-                    <DialogTrigger asChild>
+                    <div className="flex gap-2">
+                      <Dialog
+                        open={sendProfileDialog === profile._id}
+                        onOpenChange={(open) =>
+                          setSendProfileDialog(open ? profile._id : null)
+                        }
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => {
+                              setSendProfileDialog(profile._id);
+                              setSelectedCandidate("");
+                              setSendDateTime("");
+                            }}
+                          >
+                            <Send className="h-4 w-4 mr-1" />
+                            Send Profile
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Send Profile to Client</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <Label>Candidate Name</Label>
+                              <Input
+                                value={selectedCandidate}
+                                onChange={(e) =>
+                                  setSelectedCandidate(e.target.value)
+                                }
+                                placeholder="Enter candidate name"
+                              />
+                            </div>
+                            <div>
+                              <Label>Send Date & Time</Label>
+                              <Input
+                                type="datetime-local"
+                                value={sendDateTime}
+                                onChange={(e) =>
+                                  setSendDateTime(e.target.value)
+                                }
+                              />
+                            </div>
+                            <Button
+                              onClick={() => sendProfileToClient(profile._id)}
+                              className="w-full"
+                            >
+                              Send Profile
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      {profile.status === "Profile Sent" && (
+                        <Dialog
+                          open={scheduleInterview === profile._id}
+                          onOpenChange={(open) =>
+                            setScheduleInterview(open ? profile._id : null)
+                          }
+                        >
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setScheduleInterview(profile._id);
+                                setInterviewDate("");
+                              }}
+                            >
+                              <Calendar className="h-4 w-4 mr-1" />
+                              Schedule Interview
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Schedule Interview</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label>Interview Date & Time</Label>
+                                <Input
+                                  type="datetime-local"
+                                  value={interviewDate}
+                                  onChange={(e) =>
+                                    setInterviewDate(e.target.value)
+                                  }
+                                />
+                              </div>
+                              <Button
+                                onClick={() =>
+                                  scheduleInterviewForProfile(profile._id)
+                                }
+                                className="w-full"
+                              >
+                                Schedule Interview
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      {/* old version */}
                       <Button
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
-                        onClick={() => {
-                          setSendProfileDialog(profile._id);
-                          setSelectedCandidate("");
-                          setSendDateTime("");
-                        }}
+                        variant="outline"
+                        onClick={() => onEdit(profile)}
                       >
-                        <Send className="h-4 w-4 mr-1" />
-                        Send Profile
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Send Profile to Client</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Candidate Name</Label>
-                          <Input
-                            value={selectedCandidate}
-                            onChange={(e) =>
-                              setSelectedCandidate(e.target.value)
-                            }
-                            placeholder="Enter candidate name"
-                          />
-                        </div>
-                        <div>
-                          <Label>Send Date & Time</Label>
-                          <Input
-                            type="datetime-local"
-                            value={sendDateTime}
-                            onChange={(e) => setSendDateTime(e.target.value)}
-                          />
-                        </div>
-                        <Button
-                          onClick={() => sendProfileToClient(profile._id)}
-                          className="w-full"
-                        >
-                          Send Profile
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
 
-                  {profile.status === "Profile Sent" && (
-                    <Dialog
-                      open={scheduleInterview === profile._id}
-                      onOpenChange={(open) =>
-                        setScheduleInterview(open ? profile._id : null)
-                      }
-                    >
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setScheduleInterview(profile._id);
-                            setInterviewDate("");
-                          }}
-                        >
-                          <Calendar className="h-4 w-4 mr-1" />
-                          Schedule Interview
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Schedule Interview</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label>Interview Date & Time</Label>
-                            <Input
-                              type="datetime-local"
-                              value={interviewDate}
-                              onChange={(e) => setInterviewDate(e.target.value)}
-                            />
-                          </div>
-                          <Button
-                            onClick={() =>
-                              scheduleInterviewForProfile(profile._id)
-                            }
-                            className="w-full"
-                          >
-                            Schedule Interview
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
+                      {/* old version  */}
 
-                <div className="flex gap-2">
-
-
-                  {/* old version */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onEdit(profile)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  
-
-                  {/* old version  */}
-
-                  {/* <Button
+                      {/* <Button
                     size="sm"
                     variant="outline"
                     onClick={() => closeJob(profile._id)}
@@ -470,63 +475,60 @@ export const JobProfileList = ({
                   >
                     <X className="h-4 w-4 mr-1" />
                     Close
-                  </Button> */}            
-                   
+                  </Button> */}
 
-                    {/* updated close button with popup */}
-                    <Dialog
-                      open={confirmCloseJobId === profile._id}
-                      onOpenChange={(open) =>
-                        setConfirmCloseJobId(open ? profile._id : null)
-                      }
-                    >
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setConfirmCloseJobId(profile._id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <X className="h-4 w-4 mr-1" />
-                          Close
-                        </Button>
-                      </DialogTrigger>
-
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Confirm Close</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 text-sm text-gray-600">
-                          Are you sure you want to close this Job? This
-                          action cannot be undone.
-                        </div>
-
-                        <div className="flex justify-end gap-2 pt-4">
+                      {/* updated close button with popup */}
+                      <Dialog
+                        open={confirmCloseJobId === profile._id}
+                        onOpenChange={(open) =>
+                          setConfirmCloseJobId(open ? profile._id : null)
+                        }
+                      >
+                        <DialogTrigger asChild>
                           <Button
+                            size="sm"
                             variant="outline"
-                            onClick={() => setConfirmCloseJobId(null)}
+                            onClick={() => setConfirmCloseJobId(profile._id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
-                            ❌ Cancel
+                            <X className="h-4 w-4 mr-1" />
+                            Close
                           </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => {
-                              closeJob(profile._id);
-                              setConfirmCloseJobId(null);
-                            }}
-                          >
-                            ✅ Yes, Close
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                   </> )}
-                </div>
+                        </DialogTrigger>
 
-  
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Confirm Close</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 text-sm text-gray-600">
+                            Are you sure you want to close this Job? This action
+                            cannot be undone.
+                          </div>
+
+                          <div className="flex justify-end gap-2 pt-4">
+                            <Button
+                              variant="outline"
+                              onClick={() => setConfirmCloseJobId(null)}
+                            >
+                              ❌ Cancel
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => {
+                                closeJob(profile._id);
+                                setConfirmCloseJobId(null);
+                              }}
+                            >
+                              ✅ Yes, Close
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </>
+                )}
               </div>
-           
+            </div>
 
             {profile.description && (
               <div className="border-t pt-4">
