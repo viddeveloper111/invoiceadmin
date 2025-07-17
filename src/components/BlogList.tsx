@@ -806,13 +806,7 @@ export default function BlogList(): JSX.Element {
                       <p className="font-semibold text-gray-900">Brief Description:</p>
                       <p className="line-clamp-2">{blog.briefDescription}</p>
                     </div>
-                    {/* Display technology if available (primarily for Vidhema) */}
-                    {blog.technology && (
-                        <div className="bg-gray-50 p-3 rounded-lg flex items-center gap-2 col-span-1">
-                            <span className="font-semibold text-gray-900 shrink-0">Tech:</span>
-                            <p className="truncate">{blog.technology}</p>
-                        </div>
-                    )}
+                    
                   </div>
                 </div>
 

@@ -204,14 +204,7 @@ export default function AddVidhemaBlogForm(): JSX.Element {
             Fill in the details for a new blog entry on vidhema.com.
         </p>
     </div>
-    <Button
-        variant="ghost"
-        onClick={() => navigate(-1)}
-        className="hover:bg-white/60 backdrop-blur-sm border border-gray-200 flex-shrink-0"
-    >
-        <XCircle className="h-4 w-4 mr-2" />
-        Cancel
-    </Button>
+    
 </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 p-8 bg-white shadow-lg rounded-xl border border-gray-200">
