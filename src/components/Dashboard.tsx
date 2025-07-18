@@ -498,7 +498,7 @@ export const Dashboard = () => {
           new Date(b.followup.datetime).getTime()
       );
       // Limit to top 3 (or any number you want)
-      const topFollowups = futureFollowups.slice(0, 4);
+      const topFollowups = futureFollowups.slice(0, 6);
 
       // Set count and next followup client as you already do
       setNextFollowupsCount(futureFollowups.length);
@@ -825,23 +825,19 @@ console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
                 {/* <div className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</div> */}
                 {stat.title === "Total Clients" ? (
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {totalClients || stat.value}
+                    {totalClients ||0}
                   </div>
                 ) : stat.title === "Active Job Profiles" ? (
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {activeJobProfile || stat.value}
+                    {activeJobProfile ||0}
                   </div>
                 ) : stat.title === "Pending Follow-ups" ? (
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {totalPendingFollowUpBoth || stat.value}
+                    {totalPendingFollowUpBoth||0 }
                   </div>
-                ) : stat.title === "Follow-up-Project" ? (
+                )  : (
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {totalPendingFollowUpBoth || stat.value}
-                  </div>
-                ) : (
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {partialPayementStatus || stat.value}
+                    {partialPayementStatus ||0}
                   </div>
                 )}
                 <div className="flex items-center text-xs text-green-600">
@@ -893,7 +889,7 @@ console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
                           </p>
                           <p className="text-sm text-gray-600 truncate">
                             {`${
-                              newClientCreated?.company || activity.description
+                              newClientCreated?.company || 'No Client has '
                             } added to system`}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
@@ -929,7 +925,7 @@ console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
                           </p>
                           <p className="text-sm text-gray-600 truncate">
                             {`${
-                              newProjectCreated?.title || activity.description
+                              newProjectCreated?.title || "No New "
                             } Project created`}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
@@ -948,7 +944,7 @@ console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
                           <p className="text-sm text-gray-600 truncate">
                             {`Payment reminder sent to ${
                               partialPayementClient?.company ||
-                              activity.description
+                             'NO Partial Payement'
                             } `}
                           </p>
                         </div>
@@ -960,7 +956,7 @@ console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
                           <p className="text-sm text-gray-600 truncate">
                             {` Follow -Up scheduled with Client${
                               nextFollowupClient?.company ||
-                              activity.description
+                              "No One "
                             } `}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
@@ -981,7 +977,7 @@ console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
                           <p className="text-sm text-gray-600 truncate">
                             {` Follow -Up scheduled with Client${
                               nextFollowupProjects?.title ||
-                              activity.description
+                             "No One"
                             } `}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
@@ -1000,8 +996,8 @@ console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
                           </p>
                           <p className="text-sm text-gray-600 truncate">
                             {`Follow-up scheduled with Job ${
-                              nextFollowupJobs?.title || activity.description
-                            } `}
+                              nextFollowupJobs?.title || "No One"
+                            }  ` }
                           </p>
                           <p className="text-xs text-gray-600 truncate">
                             {nextFollowupJobs &&

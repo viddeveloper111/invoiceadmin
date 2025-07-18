@@ -304,9 +304,35 @@ export const ClientList = ({
       });
     }
   };
+
+  const validateFollowUpData = (): boolean => {
+  if (!followupData.description.trim()) {
+    toast({
+      variant: "destructive",
+      title: "❌ Validation Error",
+      description: "Follow-up description cannot be empty.",
+    });
+    return false;
+  }
+
+  if (!followupData.datetime) {
+    toast({
+      variant: "destructive",
+      title: "❌ Validation Error",
+      description: "Please select a valid follow-up date and time.",
+    });
+    return false;
+  }
+
+  return true;
+};
+
   const addFollowup = (e, clientId: string) => {
     e.preventDefault();
     const client = clients.find((c) => c.id === clientId);
+      if (!client) return;
+
+  if (!validateFollowUpData()) return; // 🔐 Stop if validation fails
     if (client && followupData.description && followupData.datetime) {
       const newFollowup = {
         id: Date.now(),
