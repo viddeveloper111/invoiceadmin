@@ -25,11 +25,11 @@ export default function AddVidhemaBlogForm(): JSX.Element {
     url: '', // Vidhema's slug/URL field
     technology: '',
     // featured_image and background_image will now be handled by file inputs
-    short_description: '', // Equivalent to briefDescription
+    shortDescription: '', // Equivalent to briefDescription
     date: new Date().toISOString().split('T')[0],
     select_author: '', // Vidhema's author field
     select_category: '', // Vidhema's category field
-    detail_description: '', // Equivalent to full content
+    description: '', // Equivalent to full content
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
@@ -132,11 +132,11 @@ export default function AddVidhemaBlogForm(): JSX.Element {
         // If you intend to upload with this form, you'd handle that process here.
         featured_image: formData.featured_image || featuredImagePreviewUrl || '', // Use URL from form or local preview (for demo)
         background_image: formData.background_image || backgroundImagePreviewUrl || '', // Use URL from form or local preview (for demo)
-        short_description: formData.short_description,
+        shortDescription: formData.shortDescription,
         date: formData.date,
         select_author: formData.select_author,
         select_category: formData.select_category,
-        detail_description: formData.detail_description,
+        description: formData.description,
         meta_title: formData.meta_title,
         meta_description: formData.meta_description,
         meta_keywords: formData.meta_keywords,
@@ -230,7 +230,7 @@ export default function AddVidhemaBlogForm(): JSX.Element {
             <Label htmlFor="short_description" className="flex items-center gap-1">
               <Info className="h-4 w-4 text-purple-500" /> Short Description <span className="text-red-500">*</span>
             </Label>
-            <Textarea id="short_description" value={formData.short_description} onChange={handleChange} required rows={3} placeholder="A brief summary for Vidhema" />
+            <Textarea id="short_description" value={formData.shortDescription} onChange={handleChange} required rows={3} placeholder="A brief summary for Vidhema" />
           </div>
 
           {/* Detail Description (Full Content) */}
@@ -238,7 +238,7 @@ export default function AddVidhemaBlogForm(): JSX.Element {
             <Label htmlFor="detail_description" className="flex items-center gap-1">
               <FileText className="h-4 w-4 text-orange-500" /> Detail Description <span className="text-red-500">*</span>
             </Label>
-            <Textarea id="detail_description" value={formData.detail_description} onChange={handleChange} required rows={8} placeholder="The detailed content of the blog post" />
+            <Textarea id="detail_description" value={formData.description} onChange={handleChange} required rows={8} placeholder="The detailed content of the blog post" />
           </div>
 
           {/* Technology */}
@@ -252,7 +252,7 @@ export default function AddVidhemaBlogForm(): JSX.Element {
           {/* --- FEATURED IMAGE INPUT --- */}
           <div className="space-y-2">
             <Label htmlFor="featuredImageUpload" className="flex items-center gap-1">
-              <Image className="h-4 w-4 text-teal-500" /> Featured Image (Local File) <span className="text-red-500">*</span>
+              <Image className="h-4 w-4 text-teal-500" /> Featured Image <span className="text-red-500">*</span>
             </Label>
             <Input
               id="featuredImageUpload"
@@ -273,7 +273,6 @@ export default function AddVidhemaBlogForm(): JSX.Element {
               </div>
             )}
              <p className="text-sm text-gray-500 mt-1">
-               This image is for local preview. Actual upload requires an API.
             </p>
           </div>
 
@@ -300,7 +299,6 @@ export default function AddVidhemaBlogForm(): JSX.Element {
               </div>
             )}
              <p className="text-sm text-gray-500 mt-1">
-               This image is for local preview. Actual upload requires an API.
             </p>
           </div>
           {/* You might still want to keep the URL inputs if you allow direct URL input as an alternative */}
@@ -343,7 +341,6 @@ export default function AddVidhemaBlogForm(): JSX.Element {
               placeholder="e.g., seo, marketing, content, blog"
             />
              <p className="text-sm text-gray-500 mt-1">
-               Specific tags or keywords for Vidhema's meta data.
             </p>
           </div>
 
@@ -393,7 +390,6 @@ export default function AddVidhemaBlogForm(): JSX.Element {
               placeholder="Enter each FAQ item on a new line. e.g., 'Q: What is solar energy?\nA: Solar energy is...' "
             />
              <p className="text-sm text-gray-500 mt-1">
-               Each line in this text area will be treated as a separate FAQ item.
             </p>
           </div>
 

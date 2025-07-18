@@ -379,23 +379,8 @@ export default function AddSolarStationBlogForm(): JSX.Element {
 
           {/* Image Upload/Preview (Local File) */}
           <div className="space-y-2 col-span-1 md:col-span-2">
-            <Label htmlFor="imageUpload" className="flex items-center gap-1">
-              <Image className="h-4 w-4 text-teal-500" /> Blog Featured Image URL
-            </Label>
-             <Input
-                id="featuredImage"
-                name="featuredImage"
-                type="text"
-                value={blogData.featuredImage || ''}
-                onChange={handleChange}
-                placeholder="Enter URL for featured image (e.g., https://example.com/image.jpg)"
-             />
-             <p className="text-sm text-gray-500 mt-1">
-               Provide a direct URL to your blog's featured image.
-            </p>
-            {/* You can still keep the file input for local preview if desired, but prioritize URL for API */}
             <Label htmlFor="imageFileInput" className="flex items-center gap-1 mt-4">
-              <Image className="h-4 w-4 text-teal-500" /> OR Upload Local File (for preview only)
+              <Image className="h-4 w-4 text-teal-500" /> Featured Image
             </Label>
             <Input
               id="imageFileInput"
@@ -430,7 +415,6 @@ export default function AddSolarStationBlogForm(): JSX.Element {
               placeholder="e.g., solar panel, renewable energy, green tech"
             />
              <p className="text-sm text-gray-500">
-               Keywords for search engine optimization.
             </p>
           </div>
 
@@ -447,7 +431,6 @@ export default function AddSolarStationBlogForm(): JSX.Element {
               placeholder="e.g., solar, energy, tech"
             />
              <p className="text-sm text-gray-500">
-               Categorization tags for your blog.
             </p>
           </div>
 
