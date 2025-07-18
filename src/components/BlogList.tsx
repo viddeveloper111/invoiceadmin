@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BlogPost } from '../types'; // Common BlogPost from index.ts
 import { VidhemaRawBlog, VidhemaApiResponse } from '../types/vidhema'; // Vidhema specific types
 import { SolarStationRawBlog, SolarStationApiResponse } from '../types/solarstation'; // SolarStation specific types
+import { fetchConvexaiBlogs } from '@/api/convexaiApi'; // <--- ADD THIS LINE
+
 
 // Import ShadCN UI Components
 import { Input } from "@/components/ui/input";
@@ -28,6 +30,59 @@ import { Eye, Pencil, Trash2, Search, Plus, Star, Info, Hash, Tag, Globe } from 
 // Import the new ViewBlogModal component (assuming it works with BlogPost type)
 import ViewBlogModal from './ViewBlogModal';
 
+// --- Helper functions to fetch blogs from individual sources ---
+// These functions are outside the component to avoid re-creation on every render
+// and to be reusable for the 'all' filter.
+const fetchSolarStationBlogs = async (page: number, limit: number, term: string, transform: (raw: any) => BlogPost): Promise<BlogPost[]> => {
+    const solarstationUrlParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+    });
+    if (term) {
+        solarstationUrlParams.append('search', term);
+    }
+    const url = `https://api.solarstation.in/blogs/getAllBlogs?${solarstationUrlParams.toString()}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `SolarStation API Error: ${response.status} ${response.statusText}`);
+    }
+    const apiResponse: SolarStationApiResponse = await response.json();
+    if (!apiResponse.data || !Array.isArray(apiResponse.data)) {
+        throw new Error("SolarStation API response does not contain a valid 'data' array.");
+    }
+    return apiResponse.data.map(transform);
+};
+
+const fetchVidhemaBlogs = async (page: number, limit: number, term: string, accessToken: string, transform: (raw: any) => BlogPost): Promise<BlogPost[]> => {
+    const vidhemaFilterObj: any = {
+        order: { createdAt: -1 },
+        skip: (page - 1) * limit,
+        limit: limit,
+    };
+    if (term) {
+        vidhemaFilterObj.where = { title: { like: `.*${term}.*`, options: 'i' } };
+    }
+    const encodedFilter = encodeURIComponent(JSON.stringify(vidhemaFilterObj));
+    const url = `https://api.vidhema.com/blogs?filter=${encodedFilter}`;
+    const response = await fetch(url, {
+        headers: {
+            'access_token': accessToken,
+            'Content-Type': 'application/json',
+        },
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Vidhema API Error: ${response.status} ${response.statusText}`);
+    }
+    const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
+    if (!Array.isArray(rawVidhemaBlogs)) {
+        throw new Error("Vidhema API response is not a valid array of blogs.");
+    }
+    return rawVidhemaBlogs.map(transform);
+};
+
+
 export default function BlogList(): JSX.Element {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -43,8 +98,10 @@ export default function BlogList(): JSX.Element {
   const [websiteFilter, setWebsiteFilter] = useState<string>('solarstation.in');
 
   const availableWebsites = [
+    { value: 'all', label: 'All Blogs' }, // ADDED: 'All Blogs' option
     { value: 'solarstation.in', label: 'solarstation.in' },
     { value: 'vidhema.com', label: 'vidhema.com' },
+    { value: 'convexai.io', label: 'convexai.io' }, // ADDED: ConvexAI option
   ];
 
   // IMPORTANT: For production, this token should be fetched securely (e.g., after login)
@@ -116,143 +173,7 @@ export default function BlogList(): JSX.Element {
     };
   };
 
-  // // --- API Fetching Logic ---
-  // const fetchBlogs = useCallback(async () => {
-  //   // --- DEBUG LOG 1: What is fetchBlogs called with? ---
-  //   console.log("Fetching blogs for page:", currentPage, "limit:", currentLimit, "website:", websiteFilter, "searchTerm:", searchTerm);
-
-  //   setLoading(true);
-  //   setError(null);
-  //   try {
-  //     let url = '';
-  //     let transformedBlogs: BlogPost[] = [];
-  //     let totalPagesFromApi = 1; // Default to 1 total page
-
-  //     if (websiteFilter === 'vidhema.com') {
-  //       const vidhemaFilterObj: any = {
-  //         order: { createdAt: -1 },
-  //         skip: (currentPage - 1) * currentLimit,
-  //         limit: currentLimit,
-  //       };
-  //       if (searchTerm) {
-  //         vidhemaFilterObj.where = { title: { like: `.*${searchTerm}.*`, options: 'i' } };
-  //       }
-
-  //       const encodedFilter = encodeURIComponent(JSON.stringify(vidhemaFilterObj));
-  //       url = `https://api.vidhema.com/blogs?filter=${encodedFilter}`;
-
-  //       const response = await fetch(url, {
-  //         headers: {
-  //           'access_token': vidhemaAccessToken,
-  //           'Content-Type': 'application/json',
-  //         },
-  //       });
-  //       if (!response.ok) {
-  //         const errorData = await response.json();
-  //         throw new Error(errorData.message || `Vidhema API Error: ${response.status} ${response.statusText}`);
-  //       }
-        
-  //       // --- Corrected Vidhema API Response Handling ---
-  //       const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
-  //       console.log(
-  //         `this is conosole rdt in vidm is ${currentPage}!`,rawVidhemaBlogs)
-
-  //       if (!Array.isArray(rawVidhemaBlogs)) {
-  //         throw new Error("Vidhema API response is not a valid array of blogs.");
-  //       }
-
-  //       transformedBlogs = rawVidhemaBlogs.map(transformVidhemaBlog);
-        
-  //       // --- Pagination Logic for Vidhema (Client-side estimation) ---
-  //       // This logic estimates total pages assuming the API doesn't return total count.
-  //       // If the API returns fewer blogs than the limit, we assume we've hit the last page.
-  //       // If it returns exactly the limit, we optimistically assume there's at least one more page.
-  //       if (rawVidhemaBlogs.length < currentLimit) {
-  //           totalPagesFromApi = currentPage;
-  //       } else {
-  //           totalPagesFromApi = currentPage + 1; // Assume there's more if we got a full page
-  //       }
-  //       if (currentPage === 1 && rawVidhemaBlogs.length === 0) {
-  //           totalPagesFromApi = 1; // If first page is empty, there's only 1 page
-  //       }
-
-
-  //     } else { // websiteFilter === 'solarstation.in'
-  //       const solarstationUrlParams = new URLSearchParams({
-  //         page: currentPage.toString(),
-  //         limit: currentLimit.toString(),
-  //       });
-  //       if (searchTerm) {
-  //         solarstationUrlParams.append('search', searchTerm);
-  //       }
-
-  //       url = `https://api.solarstation.in/blogs/getAllBlogs?${solarstationUrlParams.toString()}`;
-
-  //       const response = await fetch(url);
-  //       if (!response.ok) {
-  //         const errorData = await response.json();
-  //         throw new Error(errorData.message || `SolarStation API Error: ${response.status} ${response.statusText}`);
-  //       }
-  //       const apiResponse: SolarStationApiResponse = await response.json();
-
-  //       if (!apiResponse.data || !Array.isArray(apiResponse.data)) {
-  //         throw new Error("SolarStation API response does not contain a valid 'data' array.");
-  //       }
-
-  //       transformedBlogs = apiResponse.data.map(transformSolarStationBlog);
-
-  //       // --- START OF ROBUST LOGIC FOR SOLARSTATION.IN ---
-  //       // Prioritize API's pagination data if available and valid
-  //       if (apiResponse.pagination && typeof apiResponse.pagination.totalPages === 'number') {
-  //           totalPagesFromApi = apiResponse.pagination.totalPages;
-  //           console.log("SolarStation API Pagination Response (from object):", apiResponse.pagination); // Log API's pagination
-  //       } else {
-  //           // Client-side heuristic if API doesn't provide totalPages or if the object is missing/malformed
-  //           if (transformedBlogs.length === currentLimit) {
-  //               totalPagesFromApi = currentPage + 1;
-  //           } else {
-  //               totalPagesFromApi = currentPage;
-  //           }
-  //           if (currentPage === 1 && transformedBlogs.length === 0) {
-  //               totalPagesFromApi = 1; // If first page is empty, there's only 1 page
-  //           }
-  //           console.log("SolarStation Client-Side Total Pages Calculation (fallback):", totalPagesFromApi); // Log client-side calculation
-  //       }
-  //       // --- END OF ROBUST LOGIC FOR SOLARSTATION.IN ---
-
-  //       console.log("SolarStation API Raw Response Data Length:", apiResponse.data.length);
-
-  //       console.log("SolarStation API Raw Response Data Length:", apiResponse.data);
-
-  //     }
-
-  //     setBlogs(transformedBlogs);
-  //     setTotalPages(totalPagesFromApi);
-
-  //     toast({
-  //       title: "Blogs Fetched",
-  //       description: `Successfully loaded ${transformedBlogs.length} blogs from ${websiteFilter}.`,
-  //       variant: "default",
-  //       duration: 1500,
-  //     });
-
-  //   } catch (err: any) {
-  //     console.error("Error fetching blogs:", err);
-  //     setError(err.message || "Failed to load blogs.");
-  //     toast({
-  //       title: "Error",
-  //       description: `Failed to load blogs: ${err.message}`,
-  //       variant: "destructive",
-  //       duration: 3000,
-  //     });
-  //     setBlogs([]);
-  //     setTotalPages(1); // Reset total pages on error
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [currentPage, searchTerm, websiteFilter, vidhemaAccessToken, toast]);
-
-
+  
   // new ---Api fetching logic without useCallback so that easily call the function on the fitler change etc.
   const fetchBlogs=async()=>{
      // --- DEBUG LOG 1: What is fetchBlogs called with? ---
@@ -261,11 +182,12 @@ export default function BlogList(): JSX.Element {
      setLoading(true);
      setError(null);
      try {
-       let url = '';
        let transformedBlogs: BlogPost[] = [];
-       let totalPagesFromApi = 1; // Default to 1 total page
- 
+       let totalItemsCount = 0; // To calculate total pages for client-side pagination
+       let totalPagesFromApi = 1; // Default to 1 total page, updated by specific API responses
+
        if (websiteFilter === 'vidhema.com') {
+         // Existing Vidhema logic
          const vidhemaFilterObj: any = {
            order: { createdAt: -1 },
            skip: (currentPage - 1) * currentLimit,
@@ -276,7 +198,7 @@ export default function BlogList(): JSX.Element {
          }
  
          const encodedFilter = encodeURIComponent(JSON.stringify(vidhemaFilterObj));
-         url = `https://api.vidhema.com/blogs?filter=${encodedFilter}`;
+         const url = `https://api.vidhema.com/blogs?filter=${encodedFilter}`;
  
          const response = await fetch(url, {
            headers: {
@@ -289,154 +211,16 @@ export default function BlogList(): JSX.Element {
            throw new Error(errorData.message || `Vidhema API Error: ${response.status} ${response.statusText}`);
          }
          
-         // --- Corrected Vidhema API Response Handling ---
          const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
          console.log(
            `this is conosole rdt in vidm is ${currentPage}!`,rawVidhemaBlogs)
  
          if (!Array.isArray(rawVidhemaBlogs)) {
            throw new Error("Vidhema API response is not a valid array of blogs.");
-         }  // const fetchBlogs = useCallback(async () => {
-          //   // --- DEBUG LOG 1: What is fetchBlogs called with? ---
-          //   console.log("Fetching blogs for page:", currentPage, "limit:", currentLimit, "website:", websiteFilter, "searchTerm:", searchTerm);
-        
-          //   setLoading(true);
-          //   setError(null);
-          //   try {
-          //     let url = '';
-          //     let transformedBlogs: BlogPost[] = [];
-          //     let totalPagesFromApi = 1; // Default to 1 total page
-        
-          //     if (websiteFilter === 'vidhema.com') {
-          //       const vidhemaFilterObj: any = {
-          //         order: { createdAt: -1 },
-          //         skip: (currentPage - 1) * currentLimit,
-          //         limit: currentLimit,
-          //       };
-          //       if (searchTerm) {
-          //         vidhemaFilterObj.where = { title: { like: `.*${searchTerm}.*`, options: 'i' } };
-          //       }
-        
-          //       const encodedFilter = encodeURIComponent(JSON.stringify(vidhemaFilterObj));
-          //       url = `https://api.vidhema.com/blogs?filter=${encodedFilter}`;
-        
-          //       const response = await fetch(url, {
-          //         headers: {
-          //           'access_token': vidhemaAccessToken,
-          //           'Content-Type': 'application/json',
-          //         },
-          //       });
-          //       if (!response.ok) {
-          //         const errorData = await response.json();
-          //         throw new Error(errorData.message || `Vidhema API Error: ${response.status} ${response.statusText}`);
-          //       }
-                
-          //       // --- Corrected Vidhema API Response Handling ---
-          //       const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
-          //       console.log(
-          //         `this is conosole rdt in vidm is ${currentPage}!`,rawVidhemaBlogs)
-        
-          //       if (!Array.isArray(rawVidhemaBlogs)) {
-          //         throw new Error("Vidhema API response is not a valid array of blogs.");
-          //       }
-        
-          //       transformedBlogs = rawVidhemaBlogs.map(transformVidhemaBlog);
-                
-          //       // --- Pagination Logic for Vidhema (Client-side estimation) ---
-          //       // This logic estimates total pages assuming the API doesn't return total count.
-          //       // If the API returns fewer blogs than the limit, we assume we've hit the last page.
-          //       // If it returns exactly the limit, we optimistically assume there's at least one more page.
-          //       if (rawVidhemaBlogs.length < currentLimit) {
-          //           totalPagesFromApi = currentPage;
-          //       } else {
-          //           totalPagesFromApi = currentPage + 1; // Assume there's more if we got a full page
-          //       }
-          //       if (currentPage === 1 && rawVidhemaBlogs.length === 0) {
-          //           totalPagesFromApi = 1; // If first page is empty, there's only 1 page
-          //       }
-        
-        
-          //     } else { // websiteFilter === 'solarstation.in'
-          //       const solarstationUrlParams = new URLSearchParams({
-          //         page: currentPage.toString(),
-          //         limit: currentLimit.toString(),
-          //       });
-          //       if (searchTerm) {
-          //         solarstationUrlParams.append('search', searchTerm);
-          //       }
-        
-          //       url = `https://api.solarstation.in/blogs/getAllBlogs?${solarstationUrlParams.toString()}`;
-        
-          //       const response = await fetch(url);
-          //       if (!response.ok) {
-          //         const errorData = await response.json();
-          //         throw new Error(errorData.message || `SolarStation API Error: ${response.status} ${response.statusText}`);
-          //       }
-          //       const apiResponse: SolarStationApiResponse = await response.json();
-        
-          //       if (!apiResponse.data || !Array.isArray(apiResponse.data)) {
-          //         throw new Error("SolarStation API response does not contain a valid 'data' array.");
-          //       }
-        
-          //       transformedBlogs = apiResponse.data.map(transformSolarStationBlog);
-        
-          //       // --- START OF ROBUST LOGIC FOR SOLARSTATION.IN ---
-          //       // Prioritize API's pagination data if available and valid
-          //       if (apiResponse.pagination && typeof apiResponse.pagination.totalPages === 'number') {
-          //           totalPagesFromApi = apiResponse.pagination.totalPages;
-          //           console.log("SolarStation API Pagination Response (from object):", apiResponse.pagination); // Log API's pagination
-          //       } else {
-          //           // Client-side heuristic if API doesn't provide totalPages or if the object is missing/malformed
-          //           if (transformedBlogs.length === currentLimit) {
-          //               totalPagesFromApi = currentPage + 1;
-          //           } else {
-          //               totalPagesFromApi = currentPage;
-          //           }
-          //           if (currentPage === 1 && transformedBlogs.length === 0) {
-          //               totalPagesFromApi = 1; // If first page is empty, there's only 1 page
-          //           }
-          //           console.log("SolarStation Client-Side Total Pages Calculation (fallback):", totalPagesFromApi); // Log client-side calculation
-          //       }
-          //       // --- END OF ROBUST LOGIC FOR SOLARSTATION.IN ---
-        
-          //       console.log("SolarStation API Raw Response Data Length:", apiResponse.data.length);
-        
-          //       console.log("SolarStation API Raw Response Data Length:", apiResponse.data);
-        
-          //     }
-        
-          //     setBlogs(transformedBlogs);
-          //     setTotalPages(totalPagesFromApi);
-        
-          //     toast({
-          //       title: "Blogs Fetched",
-          //       description: `Successfully loaded ${transformedBlogs.length} blogs from ${websiteFilter}.`,
-          //       variant: "default",
-          //       duration: 1500,
-          //     });
-        
-          //   } catch (err: any) {
-          //     console.error("Error fetching blogs:", err);
-          //     setError(err.message || "Failed to load blogs.");
-          //     toast({
-          //       title: "Error",
-          //       description: `Failed to load blogs: ${err.message}`,
-          //       variant: "destructive",
-          //       duration: 3000,
-          //     });
-          //     setBlogs([]);
-          //     setTotalPages(1); // Reset total pages on error
-          //   } finally {
-          //     setLoading(false);
-          //   }
-          // }, [currentPage, searchTerm, websiteFilter, vidhemaAccessToken, toast]);
- 
+         }  
          transformedBlogs = rawVidhemaBlogs.map(transformVidhemaBlog);
          
-         // --- Pagination Logic for Vidhema (Client-side estimation) ---
-         // This logic estimates total pages assuming the API doesn't return total count.
-         // If the API returns fewer blogs than the limit, we assume we've hit the last page.
-         // If it returns exactly the limit, we optimistically assume there's at least one more page.
+
          if (rawVidhemaBlogs.length < currentLimit) {
              totalPagesFromApi = currentPage;
          } else {
@@ -447,7 +231,8 @@ export default function BlogList(): JSX.Element {
          }
  
  
-       } else { // websiteFilter === 'solarstation.in'
+       } else if (websiteFilter === 'solarstation.in') { // Changed 'else' to 'else if' for clarity
+         // Existing SolarStation logic
          const solarstationUrlParams = new URLSearchParams({
            page: currentPage.toString(),
            limit: currentLimit.toString(),
@@ -456,7 +241,7 @@ export default function BlogList(): JSX.Element {
            solarstationUrlParams.append('search', searchTerm);
          }
  
-         url = `https://api.solarstation.in/blogs/getAllBlogs?${solarstationUrlParams.toString()}`;
+         const url = `https://api.solarstation.in/blogs/getAllBlogs?${solarstationUrlParams.toString()}`;
  
          const response = await fetch(url);
          if (!response.ok) {
@@ -494,6 +279,63 @@ export default function BlogList(): JSX.Element {
  
          console.log("SolarStation API Raw Response Data Length:", apiResponse.data);
  
+       } else if (websiteFilter === 'convexai.io') { // NEW: Logic for ConvexAI blogs
+         console.log("Fetching blogs from ConvexAI...");
+         // fetchConvexaiBlogs is assumed to return already transformed BlogPost[] and fetch all available blogs
+         let allConvexaiBlogs = await fetchConvexaiBlogs(); 
+
+         // Apply client-side search filter
+         if (searchTerm) {
+             allConvexaiBlogs = allConvexaiBlogs.filter(blog =>
+                 blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (blog.briefDescription && blog.briefDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                 (blog.description && blog.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                 blog.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 blog.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (Array.isArray(blog.tags) && blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+             );
+         }
+         
+         totalItemsCount = allConvexaiBlogs.length; // Get count of all filtered items
+         totalPagesFromApi = Math.ceil(totalItemsCount / currentLimit) || 1; // Calculate total pages
+
+         // Apply client-side pagination (slicing)
+         const startIndex = (currentPage - 1) * currentLimit;
+         const endIndex = startIndex + currentLimit;
+         transformedBlogs = allConvexaiBlogs.slice(startIndex, endIndex);
+
+         console.log("ConvexAI blogs fetched and paginated:", transformedBlogs);
+
+       } else if (websiteFilter === 'all') { // NEW: Logic for 'all' blogs
+         console.log("Fetching all blogs from all sources...");
+         // Fetch all blogs from each source to enable client-side search/pagination
+         const [solarBlogsAll, vidhemaBlogsAll, convexaiBlogsAll] = await Promise.all([
+           fetchSolarStationBlogs(1, 100000, '', transformSolarStationBlog), // Fetch all (high limit)
+           fetchVidhemaBlogs(1, 100000, '', vidhemaAccessToken, transformVidhemaBlog), // Fetch all (high limit)
+           fetchConvexaiBlogs(), // Assuming this already fetches all ConvexAI blogs
+         ]);
+
+         let combinedBlogs = [...solarBlogsAll, ...vidhemaBlogsAll, ...convexaiBlogsAll];
+
+         // Apply client-side search filter for combined blogs
+         if (searchTerm) {
+             combinedBlogs = combinedBlogs.filter(blog =>
+                 blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (blog.briefDescription && blog.briefDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                 (blog.description && blog.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                 blog.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 blog.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (Array.isArray(blog.tags) && blog.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
+             );
+         }
+
+         totalItemsCount = combinedBlogs.length;
+         totalPagesFromApi = Math.ceil(totalItemsCount / currentLimit) || 1;
+
+         // Apply client-side pagination
+         const startIndex = (currentPage - 1) * currentLimit;
+         const endIndex = startIndex + currentLimit;
+         transformedBlogs = combinedBlogs.slice(startIndex, endIndex);
        }
  
        setBlogs(transformedBlogs);
@@ -529,24 +371,6 @@ export default function BlogList(): JSX.Element {
     }, [currentPage, searchTerm, websiteFilter, vidhemaAccessToken, toast]);
   
 
-
-
-  // useEffect(() => {
-  //   const handler = setTimeout(() => {
-  //     console.log("[useEffect] searchTerm or websiteFilter changed. Current page:", currentPage);
-  //     // If search term or website filter changes, reset to page 1
-  //     if (currentPage !== 1) {
-  //       setCurrentPage(currentPage);
-  //     } else {
-  //       fetchBlogs(); // If already on page 1, just refetch with new search/filter
-  //     }
-  //   }, 500);
-
-  //   return () => {
-  //     clearTimeout(handler);
-  //   };
-  // }, [searchTerm, websiteFilter, currentPage, fetchBlogs]);
-
   // --- Pagination Handlers ---
   const handlePageChange = (page: number) => {
     // --- DEBUG LOG 2: Page change requested ---
@@ -555,7 +379,7 @@ export default function BlogList(): JSX.Element {
     if (page >= 1 && page <= totalPages ) {
       setCurrentPage(page);
       console.log('this is handlechange page',currentPage)
-      fetchBlogs()
+      fetchBlogs() // Keeping this call as per "do not change existing logic"
     } else {
       console.warn(`Attempted to navigate to invalid page ${page}. Total pages: ${totalPages}`);
     }
@@ -563,6 +387,7 @@ export default function BlogList(): JSX.Element {
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleWebsiteFilterChange = (value: string) => {
@@ -638,6 +463,14 @@ export default function BlogList(): JSX.Element {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
           });
+        } else if (blogToDelete.website === 'convexai.io') { // NEW: Handle ConvexAI deletion
+          toast({
+            title: "Deletion Not Supported Yet",
+            description: `Deletion of blogs from ConvexAI is not currently supported via this interface.`,
+            variant: "destructive",
+            duration: 3000,
+          });
+          return; // Exit as deletion is not performed
         } else {
           toast({
             title: "Deletion Not Supported",
@@ -832,7 +665,7 @@ export default function BlogList(): JSX.Element {
                     </Button>
                   )}
                   {/* Delete button: Only enable if delete is supported for this source */}
-                  {(blog.website === 'solarstation.in' || blog.website === 'vidhema.com') && blog.id && (
+                  {(blog.website === 'solarstation.in' || blog.website === 'vidhema.com' || blog.website === 'convexai.io') && blog.id && ( // ADDED: ConvexAI to deletion condition
                     <Button
                       size="icon"
                       variant="outline"

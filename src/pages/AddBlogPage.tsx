@@ -8,6 +8,7 @@ import { XCircle, ArrowLeft } from 'lucide-react'; // Import ChevronLeft icon
 // Import the specific forms for each website
 import AddSolarStationBlogForm from '@/components/AddSolarStationBlogForm';
 import AddVidhemaBlogForm from '@/components/AddVidhemaBlogForm';
+import AddConvexaiBlogForm from '@/components/AddConvexaiBlogForm'; 
 
 export default function AddBlogPage(): JSX.Element {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ export default function AddBlogPage(): JSX.Element {
               <SelectContent className="bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                 <SelectItem value="solarstation.in">solarstation.in</SelectItem>
                 <SelectItem value="vidhema.com">vidhema.com</SelectItem>
+                <SelectItem value="convexai.io">convexai.io</SelectItem>
               </SelectContent>
             </Select>
         </div>
@@ -51,9 +53,11 @@ export default function AddBlogPage(): JSX.Element {
       {/* Conditionally render the appropriate form based on selection */}
       {selectedWebsite === 'solarstation.in' ? (
         <AddSolarStationBlogForm />
-      ) : (
+      ) : selectedWebsite === 'vidhema.com' ? ( // Add this else if
         <AddVidhemaBlogForm />
-      )}
+      ) : ( // This will be for 'convexai.io'
+        <AddConvexaiBlogForm />
+      )}  
     </div>
   );
 }
