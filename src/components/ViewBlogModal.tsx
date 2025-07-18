@@ -3,7 +3,6 @@ import { BlogPost } from '../types/index';
 
 // Import ShadCN UI Components for the Dialog
 import { Button } from "@/components/ui/button";
-// Card, CardContent, CardHeader, CardTitle are imported but not directly used in this modal structure
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -34,6 +33,16 @@ interface ViewBlogModalProps {
 }
 
 export default function ViewBlogModal({ blog, isOpen, onClose }: ViewBlogModalProps): JSX.Element {
+  // --- ADD THESE CONSOLE LOGS ---
+  console.log("ViewBlogModal received blog object:", blog);
+  if (blog) {
+      console.log("Brief Description:", blog.briefDescription);
+      console.log("Description (Full Content):", blog.description);
+      console.log("Type of briefDescription:", typeof blog.briefDescription, "Value:", blog.briefDescription);
+      console.log("Type of description:", typeof blog.description, "Value:", blog.description);
+  }
+  // --- END CONSOLE LOGS ---
+
   if (!blog) {
     return null;
   }
@@ -45,7 +54,6 @@ export default function ViewBlogModal({ blog, isOpen, onClose }: ViewBlogModalPr
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        // MODIFIED: Added max-h-[90vh] and overflow-y-auto
         className="max-w-4xl p-0 overflow-hidden rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
       >
         <DialogHeader className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl">
@@ -139,7 +147,7 @@ export default function ViewBlogModal({ blog, isOpen, onClose }: ViewBlogModalPr
           </div>
 
           {/* Image Section */}
-          {blog.imageUrl && (
+          {blog.featuredImage && (
             <div className="space-y-2 pt-4 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <Image className="h-5 w-5 text-teal-600" />
@@ -147,7 +155,7 @@ export default function ViewBlogModal({ blog, isOpen, onClose }: ViewBlogModalPr
               </h3>
               <div className="mt-4 p-2 border rounded-lg bg-gray-50 flex items-center justify-center">
                 <img
-                  src={blog.imageUrl}
+                  src={blog.featuredImage}
                   alt={blog.title}
                   className="max-w-full h-auto max-h-64 rounded-md object-cover shadow-md"
                 />
