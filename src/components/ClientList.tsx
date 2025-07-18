@@ -148,34 +148,162 @@ export const ClientList = ({
       //   client.id === id ? { ...client, ...updates } : client
       // );
       // onUpdate(updatedClients);
-       toast({
-              title: "✅ Client Updated",
-              description: "The  Client  has been Updated.",
-            });
+      toast({
+        title: "✅ Client Updated",
+        description: "The  Client  has been Updated.",
+      });
     } catch (error) {
       console.log("thiere is error in updating", error);
-       toast({
-              variant: "destructive",
-              title: "❌ Error",
-              description:
-                error?.response?.data?.message ||
-                "Failed to Update  the Client . Please try again.",
-            });
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to Update  the Client . Please try again.",
+      });
     }
   };
   console.log("saving client", editingClient, editFormData);
   console.log("Follow Up  client", followUps, followupData);
 
-  const saveEdit = (e) => {
-    e.preventDefault();
-    if (editingClient) {
-      updateClient(editingClient, editFormData);
-      setEditingClient(null);
-      setEditFormData({});
-      setEditUps(null);
+  const validateClientData = (updates: Partial<Client>): boolean => {
+    console.log("Validating:", updates);
+
+    if (!updates.name || updates.name.trim() === "") {
+      toast({
+        variant: "destructive",
+        title: "❌ Validation Error",
+        description: "Name cannot be empty.",
+      });
+      return false;
+    }
+
+    if (
+      updates.email !== undefined &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.email)
+    ) {
+      toast({
+        variant: "destructive",
+        title: "❌ Validation Error",
+        description: "Please enter a valid email address.",
+      });
+      return false;
+    }
+
+    if (
+      updates.mobileNo !== undefined &&
+      !/^\+?[0-9]{7,15}$/.test(updates.mobileNo)
+    ) {
+      toast({
+        variant: "destructive",
+        title: "❌ Validation Error",
+        description: "Please enter a valid mobileNo.",
+      });
+      return false;
+    }
+
+    if (!updates.contactPerson || updates.contactPerson.trim() === "") {
+      toast({
+        variant: "destructive",
+        title: "❌ Validation Error",
+        description: "Contact Person cannot be empty.",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const updateClientEdit = async (id: string, updates: Partial<Client>) => {
+    if (!validateClientData(updates)) {
+      return false; // validation failed, don't update
+    }
+    try {
+      const updatePayload = {
+        ...updates,
+      };
+      console.log("Updating client with ID:", id);
+      console.log("this is the updateclient data", updatePayload);
+      const result = await axios.patch(
+        `${baseURL}/clients/${id}`,
+        updatePayload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("This is the updating data sending to database", result.data);
+      refetchClients(); // refresh the list after successful update
+      // const updatedClients = clients.map((client) =>
+      //   client.id === id ? { ...client, ...updates } : client
+      // );
+      // onUpdate(updatedClients);
+      toast({
+        title: "✅ Client Updated",
+        description: "The  Client  Edit Successfully has been Updated.",
+      });
+      return true; // update success
+    } catch (error) {
+      console.log("thiere is error in updating", error);
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to Update  the Client Data . Please try again.",
+      });
+      return false; // update failed
     }
   };
 
+  const saveEdit = async (e) => {
+    e.preventDefault();
+    if (editingClient) {
+      const success = await updateClientEdit(editingClient, editFormData);
+      if (success) {
+        // updateClient(editingClient, editFormData);
+        updateClientEdit(editingClient, editFormData);
+        setEditingClient(null);
+        setEditFormData({});
+        setEditUps(null);
+      }
+      // else: do NOT clear form — user can fix validation errors
+    }
+  };
+
+  // followup ka update
+  const updateClientFollowUp = async (id: string, updates: Partial<Client>) => {
+    try {
+      const updatePayload = {
+        ...updates,
+      };
+      console.log("Updating client with ID:", id);
+      console.log("this is the updateclient data", updatePayload);
+      const result = await axios.patch(
+        `${baseURL}/clients/${id}`,
+        updatePayload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("This is the updating data sending to database", result.data);
+      refetchClients(); // refresh the list after successful update
+      // const updatedClients = clients.map((client) =>
+      //   client.id === id ? { ...client, ...updates } : client
+      // );
+      // onUpdate(updatedClients);
+      toast({
+        title: "✅ Client FollowUp is added",
+        description: "The  Client Followup  has been added.",
+      });
+    } catch (error) {
+      console.log("thiere is error in updating", error);
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to Update  the Client Followup . Please try again.",
+      });
+    }
+  };
   const addFollowup = (e, clientId: string) => {
     e.preventDefault();
     const client = clients.find((c) => c.id === clientId);
@@ -187,7 +315,11 @@ export const ClientList = ({
         completed: false,
       };
       const followups = client.followups || [];
-      updateClient(clientId, {
+      // updateClient(clientId, {
+      //   followups: [...followups, newFollowup],
+      //   nextFollowup: followupData.datetime.split("T")[0],
+      // });
+      updateClientFollowUp(clientId, {
         followups: [...followups, newFollowup],
         nextFollowup: followupData.datetime.split("T")[0],
       });
@@ -196,6 +328,41 @@ export const ClientList = ({
     }
   };
 
+  // chat ka update
+  const updateClientChat = async (id: string, updates: Partial<Client>) => {
+    try {
+      const updatePayload = {
+        ...updates,
+      };
+      console.log("Updating client with ID:", id);
+      console.log("this is the updateclient data", updatePayload);
+      const result = await axios.patch(
+        `${baseURL}/clients/${id}`,
+        updatePayload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("This is the updating data sending to database", result.data);
+      refetchClients(); // refresh the list after successful update
+      // const updatedClients = clients.map((client) =>
+      //   client.id === id ? { ...client, ...updates } : client
+      // );
+      // onUpdate(updatedClients);
+      toast({
+        title: "✅ Client Chat is added",
+        description: "The  Client Chat  has been added.",
+      });
+    } catch (error) {
+      console.log("thiere is error in updating", error);
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to Update  the Client Chat . Please try again.",
+      });
+    }
+  };
   const addChatMessage = (e, clientId: string) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -207,7 +374,11 @@ export const ClientList = ({
         timestamp: new Date().toISOString(),
       };
       const messages = client.chatMessages || [];
-      updateClient(clientId, {
+      // updateClient(clientId, {
+      //   chatMessages: [...messages, newMsg],
+      //   conversations: (client.conversations || 0) + 1,
+      // });
+      updateClientChat(clientId, {
         chatMessages: [...messages, newMsg],
         conversations: (client.conversations || 0) + 1,
       });
@@ -216,10 +387,58 @@ export const ClientList = ({
     }
   };
 
+
+  // Payement ka update
+  const updateClientPayement = async (id: string, updates: Partial<Client>) => {
+    try {
+      const updatePayload = {
+        ...updates,
+      };
+      console.log("Updating client with ID:", id);
+      console.log("this is the updateclient data", updatePayload);
+      const result = await axios.patch(
+        `${baseURL}/clients/${id}`,
+        updatePayload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("This is the updating data sending to database", result.data);
+      refetchClients(); // refresh the list after successful update
+      // const updatedClients = clients.map((client) =>
+      //   client.id === id ? { ...client, ...updates } : client
+      // );
+      // onUpdate(updatedClients);
+      toast({
+        title: "✅ Client Payement is added",
+        description: "The  Client Payement  has been added.",
+      });
+    } catch (error) {
+      console.log("thiere is error in updating", error);
+      toast({
+        variant: "destructive",
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to Update  the Client Payement . Please try again.",
+      });
+    }
+  };
   const updatePaymentStatus = (e, clientId: string) => {
     e.preventDefault();
-    updateClient(clientId, {
-      paymentStatus: paymentData.status,
+    // Determine the correct payment status based on amounts
+    const newStatus =
+      paymentData.totalAmount === paymentData.paidAmount
+        ? "Paid"
+        : paymentData.status;
+    // updateClient(clientId, {
+    //   // paymentStatus: paymentData.status,
+    //   paymentStatus: newStatus,
+    //   totalAmount: paymentData.totalAmount,
+    //   paidAmount: paymentData.paidAmount,
+    // });
+     updateClientPayement(clientId, {
+      // paymentStatus: paymentData.status,
+      paymentStatus: newStatus,
       totalAmount: paymentData.totalAmount,
       paidAmount: paymentData.paidAmount,
     });
@@ -313,9 +532,7 @@ export const ClientList = ({
                       Contact Person
                     </p>
                     {/* <p>{client.contactPerson}</p> */}
-                    <p>
-                      {client.contactPerson || client.projectManager || "N/A"}
-                    </p>
+                    <p>{client.contactPerson || "N/A"}</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Email</p>
@@ -324,8 +541,9 @@ export const ClientList = ({
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Phone</p>
                     <p>
-                      {" "}
-                      {client.countryCode} {client.mobileNo || client.phone}
+                      {/* {" "}
+                      {client.countryCode} {client.mobileNo || client.phone} */}{" "}
+                      {client.countryCode} {client.mobileNo}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
@@ -450,13 +668,15 @@ export const ClientList = ({
                             Phone
                           </Label>
                           <Input
-                            value={
-                              editFormData.phone || editFormData.mobileNo || ""
-                            }
+                            // value={
+                            //   editFormData.phone || editFormData.mobileNo || ""
+                            // }
+                            value={editFormData.mobileNo || ""}
                             onChange={(e) =>
                               setEditFormData((prev) => ({
                                 ...prev,
-                                phone: e.target.value,
+                                // phone: e.target.value,
+                                mobileNo: e.target.value,
                               }))
                             }
                             className="mt-1"
@@ -867,12 +1087,28 @@ export const ClientList = ({
                               <Input
                                 type="number"
                                 value={paymentData.paidAmount}
-                                onChange={(e) =>
-                                  setPaymentData((prev) => ({
-                                    ...prev,
-                                    paidAmount: Number(e.target.value),
-                                  }))
-                                }
+                                // onChange={(e) =>
+                                //   setPaymentData((prev) => ({
+                                //     ...prev,
+                                //     paidAmount: Number(e.target.value),
+                                //   }))
+                                // }
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  if (val <= paymentData.totalAmount) {
+                                    setPaymentData((prev) => ({
+                                      ...prev,
+                                      paidAmount: val,
+                                    }));
+                                  } else {
+                                    toast({
+                                      variant: "destructive",
+                                      title: "❌ Invalid Amount",
+                                      description:
+                                        "Paid amount cannot exceed total amount.",
+                                    });
+                                  }
+                                }}
                                 className="mt-1"
                               />
                             </div>

@@ -514,26 +514,35 @@ export const Dashboard = () => {
   };
 
   // new date top finding update of project
-  const getTopFollowupDate = (project: ProjectProfile): string | null => {
-    const now = new Date().getTime();
+const getTopFollowupDate = (project: ProjectProfile): string | null => {
+  const now = Date.now();
+  const candidates: number[] = [];
 
-    // Step 1: Filter out only future followups
-    const futureFollowups = (project.followups || []).filter((fu) => {
-      return new Date(fu.datetime).getTime() > now;
+  // 1. Collect future followups from followups[]
+  if (Array.isArray(project.followups)) {
+    project.followups.forEach((fu) => {
+      const time = new Date(fu.datetime).getTime();
+      if (time > now) {
+        candidates.push(time);
+      }
     });
+  }
 
-    // Step 2: Sort and get the earliest future followup
-    const sorted = futureFollowups.sort(
-      (a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
-    );
+  // 2. Add actionDetails.followUpDate if in future
+  const actionFollowupTime = project.actionDetails?.followUpDate
+    ? new Date(project.actionDetails.followUpDate).getTime()
+    : null;
 
-    if (sorted.length > 0) {
-      return sorted[0].datetime;
-    }
+  if (actionFollowupTime && actionFollowupTime > now) {
+    candidates.push(actionFollowupTime);
+  }
 
-    // Step 3: Fallback to actionDetails.followUpDate if no future followups
-    return project.actionDetails?.followUpDate || null;
-  };
+  // 3. Return earliest one, or null
+  if (candidates.length === 0) return null;
+
+  const soonest = Math.min(...candidates);
+  return new Date(soonest).toISOString(); // standardized format
+};
 
   // get the projects data
   const getProjectData = async () => {
@@ -589,17 +598,34 @@ export const Dashboard = () => {
 
       // new update Project Followups
 
-      const futureFollowups = AllProjectsData.map((project) => {
-        const followupDate = getTopFollowupDate(project); // string | null
-        const followupTime = followupDate
-          ? new Date(followupDate).getTime()
-          : null;
+      // const futureFollowups = AllProjectsData.map((project) => {
+      //   const followupDate = getTopFollowupDate(project); // string | null
+      //   const followupTime = followupDate
+      //     ? new Date(followupDate).getTime()
+      //     : null;
 
-        return followupTime ? { project, followupTime } : null;
-      }).filter(
-        (item): item is { project: ProjectProfile; followupTime: number } =>
-          item !== null
-      );
+      //   return followupTime ? { project, followupTime } : null;
+      // }).filter(
+      //   (item): item is { project: ProjectProfile; followupTime: number } =>
+      //     item !== null
+      // );
+
+     
+
+const futureFollowups = AllProjectsData
+  .map((project) => {
+    const followupDate = getTopFollowupDate(project);
+    const followupTime = followupDate ? new Date(followupDate).getTime() : null;
+
+    return followupTime && followupTime > now
+      ? { project, followupTime }
+      : null;
+  })
+  .filter(
+    (item): item is { project: ProjectProfile; followupTime: number } =>
+      item !== null
+  );
+
 
       console.log("🟢 Future Projects  Followups:", futureFollowups);
 
@@ -633,6 +659,8 @@ export const Dashboard = () => {
     const date = new Date(datetime);
     const followupDate = new Date(datetime);
     const now = new Date();
+
+    console.log(`foramt followupDate ${followupDate} and now ${now}`)
 
     const isToday =
       followupDate.getDate() === now.getDate() &&
@@ -710,8 +738,21 @@ export const Dashboard = () => {
       return `${fullDate}, ${time}`;
     }
 
-    return time;
+    const completeDate = date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      });
+
+    return `${completeDate} ${time}`;
   };
+
+  const datetime = "2025-07-18T06:40:00.000Z"; // stored in DB in UTC
+
+const result = formatFollowupDate(datetime, true);
+console.log(result); // expected: "18 Jul 2025, 12:10 PM" (if IST)
+
 
   useEffect(() => {
     getClientData();
@@ -1052,7 +1093,7 @@ export const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center text-gray-600 text-sm py-6">
-                  🚫 No upcoming follow-ups In Clients. Please Add Your Upcomig
+                  🚫 No upcoming follow-ups In Clients. Please Add Your Upcoming
                   FollowUps
                 </div>
               )}
@@ -1129,7 +1170,7 @@ export const Dashboard = () => {
                 ))
               ) : (
                 <div className="text-center text-gray-600 text-sm py-6">
-                  🚫 No upcoming follow-ups In Jobs. Please Add Your Upcomig
+                  🚫 No upcoming follow-ups In Jobs. Please Add Your Upcoming
                   FollowUps
                 </div>
               )}
@@ -1187,9 +1228,10 @@ export const Dashboard = () => {
                           {project.title || "Job Title"}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {formatFollowupDate(
-                            project.actionDetails.followUpDate
-                          )}
+                          {/* {formatFollowupDate(
+                            project.followups.datetime
+                          )} */}
+                          {formatFollowupDate(getTopFollowupDate(project))}
                         </p>
                       </div>
                       {/* same followup and high nhi dikh */}
@@ -1210,7 +1252,7 @@ export const Dashboard = () => {
                 )
               ) : (
                 <div className="text-center text-gray-600 text-sm py-6">
-                  🚫 No upcoming follow-ups In Projects. Please Add Your Upcomig
+                  🚫 No upcoming follow-ups In Projects. Please Add Your Upcoming
                   FollowUps
                 </div>
               )}

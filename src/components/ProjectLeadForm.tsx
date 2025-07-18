@@ -211,6 +211,14 @@ export const ProjectLeadForm = ({
       });
       return;
     }
+    
+      // console.log("Raw Followup date creation of Project (local):",formData.followUpDate);
+      // console.log("Udate followupdate in creation of Project", formData.followUpDate);
+
+      // // convert localdateandtime to utc for consistency db
+      // const utcDateStr=new Date(formData.followUpDate).toISOString()
+      // // converted utcDateStr
+      //  console.log("Converted to UTC in Project  creation :", utcDateStr);
 
     const payload = {
       clientId: selectedClient._id,
@@ -228,6 +236,7 @@ export const ProjectLeadForm = ({
       actionDetails: {
         teamName: formData.teamName,
         followUpDate: formData.followUpDate,
+        // followUpDate: utcDateStr,
       },
       proposalDescription: "", // ✅ <-- add this explicitly
     };

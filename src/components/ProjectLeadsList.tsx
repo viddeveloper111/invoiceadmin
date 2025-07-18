@@ -227,10 +227,18 @@ export const ProjectLeadList = ({
 
   const updateFollowupDate = async (id: string) => {
     try {
+       console.log("Raw Followup date Updatelist of Project (local):",newFollowupDate);
+      console.log("Udate followupdate in list of Project", newFollowupDate);
+
+      // convert localdateandtime to utc for consistency db
+      const utcDateStr=new Date(newFollowupDate).toISOString()
+      // converted utcDateStr
+       console.log("Converted to UTC in Project  creation :", utcDateStr);
       await axios.put(
         `https://api.vidhema.com/projects/${id}`,
         {
-          "actionDetails.followUpDate": newFollowupDate,
+          // "actionDetails.followUpDate": newFollowupDate,
+          "actionDetails.followUpDate": utcDateStr,
         },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -305,15 +313,22 @@ export const ProjectLeadList = ({
 
   // update the SendProposal Description
   const sendProposalDescription = async (id: string) => {
-    if (!proposalDescription || !sendDateTime) {
+    if (!proposalDescription ) {
       toast({
         title: "Missing Fields",
-        description: "Please enter both proposal description and send date.",
+        description: "Please enter  proposal description ",
         variant: "destructive",
       });
       return;
     }
     try {
+      //  console.log("Raw Followup date Send Propsal Description Updatelist of Project (local):",sendDateTime);
+      // console.log("Udate followupdate Send ProposalDescription in list of Project", sendDateTime);
+
+      // // convert localdateandtime to utc for consistency db
+      // const utcDateStr=new Date(sendDateTime).toISOString()
+      // // converted utcDateStr
+      //  console.log("Converted to UTC in Project  creation :", utcDateStr);
       // Let's say you already have the existing project data
       const existingProject = await axios.get(
         `https://api.vidhema.com/projects/${id}`
@@ -325,11 +340,12 @@ export const ProjectLeadList = ({
       const payload = {
         status: "Lead Sent",
         proposalDescription: proposalDescription,
-        actionDetails: {
-          markAsSend: true,
-          followUpDate: sendDateTime,
-          teamName: existingTeamName, // ✅ Preserve previous value
-        },
+        // actionDetails: {
+        //   markAsSend: true,
+        //   // followUpDate: sendDateTime,
+        //   // followUpDate: utcDateStr,
+        //   teamName: existingTeamName, // ✅ Preserve previous value
+        // },
       };
 
       await axios.put(
@@ -381,6 +397,12 @@ export const ProjectLeadList = ({
       console.log("Sending followup for project:", projectId);
       console.log("Followup Description:", data.description);
       console.log("Send DateTime:", data.datetime);
+       console.log("Raw Followup date Send Proposal Description Updatelist of Project (local):", data.datetime);
+    console.log("Update followupdate Send Proposal Description in list of Project", data.datetime);
+
+    // Convert local datetime string to UTC ISO format
+    const utcDateStr = new Date(data.datetime).toISOString();
+    console.log("Converted to UTC in Project creation:", utcDateStr);
 
       const existingProject = await axios.get(
         `https://api.vidhema.com/projects/${projectId}`
@@ -393,7 +415,8 @@ export const ProjectLeadList = ({
       const newFollowup = {
         id: Date.now(),
         description: data.description,
-        datetime: data.datetime,
+        // datetime: data.datetime,
+          datetime: utcDateStr,  // use UTC here
         completed: false,
       };
 
@@ -402,7 +425,8 @@ export const ProjectLeadList = ({
       const payload = {
         followups: updatedFollowups,
         actionDetails: {
-          followUpDate: data.datetime,
+          //followUpDate: data.datetime,
+           followUpDate: utcDateStr,  // also update followUpDate in UTC
           teamName: existingTeamName,
         },
       };
@@ -447,10 +471,16 @@ export const ProjectLeadList = ({
       return;
     }
     try {
+      console.log("Raw Meeting Date (local):", MeetingDate);
+
+    // Convert MeetingDate to UTC ISO string
+    const utcMeetingDate = new Date(MeetingDate).toISOString();
+    console.log("Converted Meeting Date to UTC:", utcMeetingDate);
       await axios.put(
         `https://api.vidhema.com/projects/${id}`,
         {
-          "MeetingActionDetails.MeetingDateTime": MeetingDate,
+          // "MeetingActionDetails.MeetingDateTime": MeetingDate,
+          "MeetingActionDetails.MeetingDateTime": utcMeetingDate, // send UTC
           "MeetingActionDetails.proceedToMeeting": true,
           status: "Meeting Scheduled",
         },
@@ -544,7 +574,8 @@ export const ProjectLeadList = ({
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">Follow-up Date</p>
-                    <div className="flex items-center gap-2">
+
+                    {/* <div className="flex items-center gap-2">
                       {editingFollowup === project._id ? (
                         <div className="flex gap-1">
                           <Input
@@ -591,7 +622,17 @@ export const ProjectLeadList = ({
                           </Button>
                         </div>
                       )}
-                    </div>
+                    </div> */}
+                    
+                    {/* new followupdate */}
+                      <div className="flex items-center gap-2">
+                          <span>
+                            {new Date(
+                              project.actionDetails.followUpDate
+                            ).toLocaleDateString()}
+                          </span>
+                          </div>
+                  
                   </div>
                 </div>
 
@@ -851,14 +892,14 @@ export const ProjectLeadList = ({
                               className="w-full p-2 border rounded-md text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                           </div>
-                          <div>
+                          {/* <div>
                             <Label>Next Follow Up Date & Time</Label>
                             <Input
                               type="datetime-local"
                               value={sendDateTime}
                               onChange={(e) => setSendDateTime(e.target.value)}
                             />
-                          </div>
+                          </div> */}
                           {/* <Button
                             onClick={() => sendProfileToClient(project._id)}
                             className="w-full"
@@ -1078,7 +1119,7 @@ export const ProjectLeadList = ({
                         </form>
                       </DialogContent>
                     </Dialog>
-
+                 
                     {/* Schedule Meeting Button (if Lead Sent) */}
                     {project.status === "Lead Sent" && (
                       <Dialog

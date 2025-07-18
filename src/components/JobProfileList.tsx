@@ -118,12 +118,20 @@ export const JobProfileList = ({
 
   const updateFollowupDate = async (id: string) => {
     try {
+      console.log("Raw newFollowupDate (local):", newFollowupDate);
       console.log("Udate newFollowupDate", newFollowupDate);
+
+      // convert localdateandtime to utc for consistency db
+      const utcDateStr=new Date(newFollowupDate).toISOString()
+      // converted utcDateStr
+       console.log("Converted to UTC:", utcDateStr);
+
       await axios.put(
         // `${baseURL}/updateJobProfile/${id}`,
         `https://api.vidhema.com/updateJobProfile/${id}`,
         {
-          "actionDetails.followUpDate": newFollowupDate,
+          // "actionDetails.followUpDate": newFollowupDate,
+          "actionDetails.followUpDate": utcDateStr,
         },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -152,13 +160,21 @@ export const JobProfileList = ({
   const sendProfileToClient = async (id: string) => {
     if (!selectedCandidate || !sendDateTime) return;
     try {
+      console.log("Raw sendDateTime (local):", sendDateTime);
+      console.log("Udate sendDateTime", sendDateTime);
+
+      // convert localdateandtime to utc for consistency db
+      const utcDateStr=new Date(sendDateTime).toISOString()
+      // converted utcDateStr
+       console.log("Converted to UTC:", utcDateStr);
       await axios.put(
         `https://api.vidhema.com/updateJobProfile/${id}`,
         {
           status: "Profile Sent",
           "actionDetails.markAsSend": true,
           "actionDetails.candidateName": selectedCandidate,
-          "actionDetails.followUpDate": sendDateTime,
+          // "actionDetails.followUpDate": sendDateTime,
+           "actionDetails.followUpDate": utcDateStr,
         },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -386,7 +402,7 @@ export const JobProfileList = ({
                               />
                             </div>
                             <div>
-                              <Label>Send Date & Time</Label>
+                              <Label>Send/FollowUp Date & Time</Label>
                               <Input
                                 type="datetime-local"
                                 value={sendDateTime}

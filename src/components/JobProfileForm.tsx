@@ -177,6 +177,13 @@ export const JobProfileForm = ({
       return;
     }
 
+    //  console.log("Raw Followup date creation of client (local):",formData.followUpDate);
+    //   console.log("Udate followupdate in creation of client", formData.followUpDate);
+
+    //   // convert localdateandtime to utc for consistency db
+    //   const utcDateStr=new Date(formData.followUpDate).toISOString()
+    //   // converted utcDateStr
+    //    console.log("Converted to UTC in client creation :", utcDateStr);
     const payload = {
       clientId: selectedClient._id,
       title: formData.title,
@@ -391,7 +398,7 @@ export const JobProfileForm = ({
                     </Label>
                     <Input
                       id="followUpDate"
-                      type="datetime-local"
+                      type="date"
                       value={formData.followUpDate}
                       onChange={(e) =>
                         handleChange("followUpDate", e.target.value)
