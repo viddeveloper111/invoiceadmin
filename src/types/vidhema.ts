@@ -4,8 +4,8 @@ export interface VidhemaRawBlog {
     _id: string; // MongoDB ID
     title: string;
     url: string; // Vidhema uses 'url' as its unique identifier/slug
-    short_description: string;
-    detail_description: string;
+    shortDescription: string;
+    description: string;
     technology?: string;
     featured_image: string;
     background_image?: string;
