@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, Briefcase, BarChart, UserCheck, Newspaper } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, BarChart, UserCheck, Newspaper, Calendar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -45,7 +45,13 @@ export const Sidebar = () => {
       path: "/blog",
       type: "link",
     },
-    
+    {
+      id: "allfollowup",
+      label: "All Follow Ups",
+      icon: Calendar,
+      path: "/allfollowup",
+      type: "link",
+    },
   ];
 
   const [user, setUser] = useState(() => {
