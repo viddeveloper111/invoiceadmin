@@ -211,6 +211,29 @@ export const ProjectLeadForm = ({
       });
       return;
     }
+
+     let projectDescribeImageUrl=typeof formData.projectDescriptionFile==='string' ? formData.projectDescriptionFile : "";
+    
+        if(formData.projectDescriptionFile instanceof File)
+        {
+           const uploadData=new FormData()
+           uploadData.append("image", formData.projectDescriptionFile); 
+           try {
+        const res = await axios.post("https://api.vidhema.com/upload", uploadData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        console.log('Response of image upload',res.data)
+        projectDescribeImageUrl = res.data.imageUrl;
+      } catch (uploadErr) {
+        console.error("Upload failed:", uploadErr);
+        toast({
+          title: "❌ File Upload Failed",
+          description: "Could not upload JD file.",
+          variant: "destructive",
+        });
+        return;
+      }
+        }
     
       // console.log("Raw Followup date creation of Project (local):",formData.followUpDate);
       // console.log("Udate followupdate in creation of Project", formData.followUpDate);
@@ -232,7 +255,7 @@ export const ProjectLeadForm = ({
       // clientBudget: Number(formData.clientBudget.replace(/[^0-9.-]+/g, "")),
       clientBudget: Number(formData.clientBudget),
       status: formData.status,
-      projectDescription: formData.projectDescriptionFile,
+      projectDescription:projectDescribeImageUrl,
       actionDetails: {
         teamName: formData.teamName,
         followUpDate: formData.followUpDate,
@@ -302,7 +325,7 @@ export const ProjectLeadForm = ({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, projectDescriptionFile: file.name }));
+      setFormData((prev) => ({ ...prev, projectDescriptionFile: file }));
     }
   };
 
@@ -668,7 +691,8 @@ export const ProjectLeadForm = ({
                       <Input
                         id="projectDescriptionFile"
                         type="file"
-                        accept=".pdf,.doc,.docx"
+                       // accept=".pdf,.doc,.docx"
+                        accept="image/*"
                         onChange={handleFileUpload}
                         className="hidden"
                       />
@@ -681,9 +705,15 @@ export const ProjectLeadForm = ({
                         className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 rounded-lg"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        {formData.projectDescriptionFile ||
-                          "Upload Project Description (PDF/DOC)"}
+                        {
+                          "Upload Project Description Image"}
                       </Button>
+                                               {/* 🌐 URL display below the button */}
+   {formData.projectDescriptionFile && (
+  <div className="text-xs text-gray-500 truncate break-all">
+    {formData.projectDescriptionFile instanceof File ? formData.projectDescriptionFile.name : formData.projectDescriptionFile}
+  </div>
+)}
                     </div>
                   </div>
                 </div>

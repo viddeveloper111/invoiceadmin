@@ -278,22 +278,56 @@ export const ClientList = ({
 
       const clientResponse = await axios.get(`${baseURL}/clients/${id}`);
       const serverFollowups = clientResponse.data.followups || [];
-      // ✅ Sort followups by date DESC (newest first)
-      const sortedFollowups = [...serverFollowups].sort(
-        (a, b) =>
-          new Date(b.datetime).getTime() - new Date(a.datetime).getTime()
-      );
+      // // ✅ Sort followups by date DESC (newest first)
+      // const sortedFollowups = [...serverFollowups].sort(
+      //   (a, b) =>
+      //     new Date(b.datetime).getTime() - new Date(a.datetime).getTime()
+      // );
 
-      // ✅ Extract next and last followup
-      const nextFollowup = sortedFollowups[0]?.datetime || null;
-      const lastFollowup =
-        sortedFollowups[1]?.datetime || sortedFollowups[0]?.datetime || null;
+      // // ✅ Extract next and last followup
+      // const nextFollowup = sortedFollowups[0]?.datetime || null;
+      // const lastFollowup =
+      //   sortedFollowups[1]?.datetime || sortedFollowups[0]?.datetime || null;
+      
+      //   console.log('the sorted order of followup is',sortedFollowups)
+      //   console.log('The last followup and next followup is ',lastFollowup,nextFollowup)
 
-      const updatePayload = {
-        ...updates,
-        lastFollowup,
-        nextFollowup,
-      };
+      // const updatePayload = {
+      //   ...updates,
+      //   lastFollowup,
+      //   nextFollowup,
+      // };
+
+      // new 
+      // ✅ Merge new followups (from updates) with existing ones
+    const incomingFollowups = updates.followups || [];
+    const allFollowups = [...serverFollowups, ...incomingFollowups];
+
+    // ✅ Sort by datetime ascending (earliest to latest)
+    const sortedFollowups = [...allFollowups].sort(
+      (a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+
+    const now = new Date();
+
+    // ✅ Get upcoming and past followups
+    const futureFollowups = sortedFollowups.filter(
+      (f) => new Date(f.datetime) > now
+    );
+    const pastFollowups = sortedFollowups.filter(
+      (f) => new Date(f.datetime) <= now
+    );
+
+    // ✅ Extract next and last followup
+    const nextFollowup = futureFollowups[0]?.datetime || null;
+   const lastFollowup = pastFollowups[pastFollowups.length - 1]?.datetime || null;
+
+    const updatePayload = {
+      ...updates,
+      followups: allFollowups, // Ensure the full updated list is sent
+      nextFollowup,
+      lastFollowup,
+    };
 
       console.log("Updating client with ID:", id);
       console.log("this is the updateclient data", updatePayload);

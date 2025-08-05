@@ -177,6 +177,30 @@ export const JobProfileForm = ({
       return;
     }
 
+    let jdImageUrl=typeof formData.jdFile==='string' ? formData.jdFile : "";
+
+    if(formData.jdFile instanceof File)
+    {
+       const uploadData=new FormData()
+       uploadData.append("image", formData.jdFile); 
+       try {
+    const res = await axios.post("https://api.vidhema.com/upload", uploadData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    console.log('Response of image upload',res.data)
+    jdImageUrl = res.data.imageUrl;
+  } catch (uploadErr) {
+    console.error("Upload failed:", uploadErr);
+    toast({
+      title: "❌ File Upload Failed",
+      description: "Could not upload JD file.",
+      variant: "destructive",
+    });
+    return;
+  }
+    }
+
+
     //  console.log("Raw Followup date creation of client (local):",formData.followUpDate);
     //   console.log("Udate followupdate in creation of client", formData.followUpDate);
 
@@ -195,7 +219,8 @@ export const JobProfileForm = ({
       // clientBudget: Number(formData.clientBudget.replace(/[^0-9.-]+/g, "")),
       clientBudget: Number(formData.clientBudget),
       status: formData.status,
-      jd: formData.jdFile,
+     // jd: formData.jdFile,
+     jd:jdImageUrl,
       actionDetails: {
         candidateName: formData.candidateName,
         followUpDate: formData.followUpDate,
@@ -244,41 +269,40 @@ export const JobProfileForm = ({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (file) {
-  //     setFormData((prev) => ({ ...prev, jdFile: file.name }));
-  //   }
-  // };
-
-  // new
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    const uploadData = new FormData();
-    uploadData.append("image", file); // "image" must match backend multer field
-
-    try {
-      const response = await fetch("https://api.vidhema.com/upload", {
-        method: "POST",
-        body: uploadData,
-      });
-
-      if (!response.ok) throw new Error("Upload failed");
-
-      const result = await response.json();
-      console.log("Upload success:", result);
-
-      // Optionally set the uploaded file name or URL
-      setFormData((prev) => ({
-        ...prev,
-        jdFile: result.imageUrl || file.name, // assume your backend returns imageUrl
-      }));
-    } catch (err) {
-      console.error("Error uploading image:", err);
+    if (file) {
+      setFormData((prev) => ({ ...prev, jdFile: file }));
     }
   };
+
+//   // new
+//  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+//   const file = e.target.files?.[0];
+//   if (!file) return;
+
+//   const uploadData = new FormData();
+//   uploadData.append("image", file); // match this with your backend multer field name
+
+//   try {
+//     const response = await axios.post("http://localhost:3006/upload", uploadData, {
+//       headers: {
+//         "Content-Type": "multipart/form-data",
+//       },
+//     });
+
+//     console.log("Upload success:", response.data);
+
+//     // Update your form state with uploaded file URL or name
+//     setFormData((prev) => ({
+//       ...prev,
+//       jdFile: response.data.imageUrl || file.name,
+//     }));
+//   } catch (err) {
+//     console.error("Error uploading file:", err);
+//   }
+// };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
@@ -599,7 +623,8 @@ export const JobProfileForm = ({
                       <Input
                         id="jdFile"
                         type="file"
-                        accept=".pdf,.doc,.docx"
+                       // accept=".pdf,.doc,.docx"
+                       accept="image/*"
                         onChange={handleFileUpload}
                         className="hidden"
                       />
@@ -612,8 +637,14 @@ export const JobProfileForm = ({
                         className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 rounded-lg"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        {formData.jdFile || "Upload JD File (PDF/DOC)"}
+                        { "Upload JD File Image"}
                       </Button>
+                      {/* 🌐 URL display below the button */}
+   {formData.jdFile && (
+  <div className="text-xs text-gray-500 truncate break-all">
+    {formData.jdFile instanceof File ? formData.jdFile.name : formData.jdFile}
+  </div>
+)}
                     </div>
                   </div>
                 </div>
