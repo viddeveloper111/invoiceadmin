@@ -1062,7 +1062,7 @@ export const AllFollowUps = () => {
           {/* Search Of */}
           <div className=" flex flex-col gap-1 min-w-[200px]">
             <Label className="text-sm font-medium text-gray-700">
-              Select The Type Of Follow - Up
+              Select Type Of Follow-Up
             </Label>
             <Select
               value={filterForm.searchOf}

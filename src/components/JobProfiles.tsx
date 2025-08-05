@@ -1,3 +1,4 @@
+// Imports (same as your original)
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,16 +16,11 @@ import {
 import axios from "axios";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
+// Types (unchanged)
 interface PopulatedClientDetails {
   _id: string;
   name: string;
 }
-
-// interface SentProfile {
-//   candidateName: string;
-//   sentDate: string;
-//   _id?: string;
-// }
 
 interface ActionDetails {
   inboxType?: "employee" | "candidate";
@@ -32,7 +28,7 @@ interface ActionDetails {
   candidateName?: string | null;
   markAsSend?: boolean;
   followUpDate?: string;
-  lastfollowUpDate?:string;
+  lastfollowUpDate?: string;
 }
 
 interface InterviewActionDetails {
@@ -41,7 +37,6 @@ interface InterviewActionDetails {
   markAsClose?: boolean;
 }
 
-// Main JobProfile interface
 interface JobProfile {
   _id: string;
   clientId: PopulatedClientDetails;
@@ -52,11 +47,8 @@ interface JobProfile {
   clientBudget: number;
   status: string;
   jd?: string;
-
   actionDetails?: ActionDetails;
   interviewActionDetails?: InterviewActionDetails;
-  // sentProfiles?: SentProfile[];
-
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -70,30 +62,32 @@ export const JobProfiles = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [jobProfiles, setJobProfiles] = useState<JobProfile[]>([]);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+
   useEffect(() => {
     const fetchJobProfiles = async () => {
       try {
-        await axios
-          .get("https://api.vidhema.com/getAllJobProfiles")
-          .then((response) => {
-            setJobProfiles(response.data);
-          })
-          .catch((error) => {
-            console.log("Error to fetch jobProfilesData", error);
-          });
+        const response = await axios.get(
+          `http://localhost:3006/getAllJobProfiles?page=${currentPage}&limit=${limit}`
+        );
+        setJobProfiles(response.data.data || []);
+        setTotalPages(response.data.totalPages || 1);
       } catch (error) {
-        console.log(error);
+        console.log("Error to fetch jobProfilesData", error);
       }
     };
     fetchJobProfiles();
-  }, []);
+  }, [currentPage]);
 
   const addJobProfile = async () => {
     try {
       const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+        `https://api.vidhema.com/getAllJobProfiles?page=${currentPage}&limit=${limit}`
       );
-      setJobProfiles(response.data);
+      setJobProfiles(response.data.data || []);
       navigate("/jobs");
     } catch (error) {
       console.log("Error fetching updated job profiles", error);
@@ -124,19 +118,16 @@ export const JobProfiles = () => {
   const activeProfiles = jobProfiles.filter(
     (profile) => profile.status === "Active"
   ).length;
+
   const scheduledInterviews = jobProfiles.filter(
     (profile) => profile.status === "Interview Scheduled"
   ).length;
-  // const scheduledInterviews = jobProfiles.filter(profile => profile.interviewActionDetails.proceedToInterview).length;
 
-  // Find the profile to edit if on /jobs/edit/:id
-  let editData = null;
-  if (location.pathname.startsWith("/jobs/edit") && params.id) {
-    editData = jobProfiles.find((p) => p._id === params.id) || null;
-    console.log("editData is: ", editData);
-  }
+  const editData =
+    location.pathname.startsWith("/jobs/edit") && params.id
+      ? jobProfiles.find((p) => p._id === params.id) || null
+      : null;
 
-  // Render the form for create or edit
   if (location.pathname === "/jobs/create") {
     return (
       <JobProfileForm
@@ -168,9 +159,7 @@ export const JobProfiles = () => {
           </p>
         </div>
         <Button
-          onClick={() => {
-            navigate("/jobs/create");
-          }}
+          onClick={() => navigate("/jobs/create")}
           className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
           size="lg"
         >
@@ -181,7 +170,8 @@ export const JobProfiles = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+        {/* Total Profiles */}
+        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -199,7 +189,8 @@ export const JobProfiles = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+        {/* Active Profiles */}
+        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -217,7 +208,8 @@ export const JobProfiles = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+        {/* Scheduled Interviews */}
+        <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -271,12 +263,44 @@ export const JobProfiles = () => {
             </div>
           </div>
         </CardHeader>
+
         <CardContent className="pt-0">
           <JobProfileList
             profiles={filteredProfiles}
             onUpdate={handleUpdateProfiles}
             onEdit={handleEdit}
           />
+
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center gap-4 pt-6">
+            <Button
+              className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded ${
+                currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Prev
+            </Button>
+
+            <span className="text-sm text-blue-600 font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <Button
+              className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded ${
+                currentPage === totalPages
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+            >
+              Next
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

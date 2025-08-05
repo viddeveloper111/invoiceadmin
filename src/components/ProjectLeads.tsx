@@ -21,13 +21,6 @@ interface PopulatedClientDetails {
   name: string;
 }
 
-// interface SentProfile {
-//   candidateName: string;
-//   sentDate: string;
-//   _id?: string;
-// }
-
-// chatting
 type ChatMessage = {
   id: number;
   message: string;
@@ -44,12 +37,10 @@ interface Followup {
 interface ActionDetails {
   inboxType?: "employee" | "candidate";
   employeeId?: string;
-  // teamName?: string | null;
-  // newly teamName
-  teamName?: string[]; // ✅ Now an array of strings
+  teamName?: string[];
   markAsSend?: boolean;
   followUpDate?: string;
-  lastfollowUpDate?:string;
+  lastfollowUpDate?: string;
 }
 
 interface ProjectActionDetails {
@@ -58,7 +49,6 @@ interface ProjectActionDetails {
   markAsClose?: boolean;
 }
 
-// Main ProjectProfile interface
 interface ProjectProfile {
   _id: string;
   clientId: PopulatedClientDetails;
@@ -70,13 +60,11 @@ interface ProjectProfile {
   status: string;
   projectDescription?: string;
   proposalDescription: string;
-
   actionDetails?: ActionDetails;
   projectActionDetails?: ProjectActionDetails;
-  // sentProfiles?: SentProfile[];
   followups?: Followup[];
-  chatMessages?: ChatMessage[]; // ✅ Add this
-  conversations?: number; // ✅ Add this
+  chatMessages?: ChatMessage[];
+  conversations?: number;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -89,38 +77,26 @@ export const ProjectLeads = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [projectProfiles, setProjectProfiles] = useState<ProjectProfile[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const fetchProjectProfiles = async () => {
     try {
-      await axios
-        .get("https://api.vidhema.com/projects")
-        .then((response) => {
-          setProjectProfiles(response.data);
-          console.log(
-            "This is project fetching data through projectlead page",
-            response.data
-          );
-        })
-        .catch((error) => {
-          console.log("Error to fetch Project ProfilesData", error);
-        });
+      const response = await axios.get("https://api.vidhema.com/projects");
+      setProjectProfiles(response.data);
     } catch (error) {
-      console.log(error);
+      console.log("Error fetching Project Profiles", error);
     }
   };
+
   useEffect(() => {
     fetchProjectProfiles();
   }, []);
 
-  console.log("Fetching all project ", projectProfiles);
   const addProjectProfile = async () => {
     try {
       const response = await axios.get("https://api.vidhema.com/projects");
       setProjectProfiles(response.data);
-      console.log(
-        "This is project add ProjectProfile  data through projectlead page",
-        response.data
-      );
       navigate("/projects");
     } catch (error) {
       console.log("Error fetching updated Project profiles", error);
@@ -148,23 +124,26 @@ export const ProjectLeads = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const paginatedProjects = filteredProjects.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+
   const activeProfiles = projectProfiles.filter(
     (profile) => profile?.status === "Active"
   ).length;
 
-  console.log("Active profiles filter:", activeProfiles);
   const scheduledMeetings = projectProfiles.filter(
     (profile) => profile.status === "Meeting Scheduled"
   ).length;
 
-  // Find the profile to edit if on /project/edit/:id
   let editData = null;
   if (location.pathname.startsWith("/projects/edit") && params.id) {
     editData = projectProfiles.find((p) => p._id === params.id) || null;
-    console.log("editData is: ", editData);
   }
 
-  // Render the form for create or edit
   if (location.pathname === "/projects/create") {
     return (
       <ProjectLeadForm
@@ -184,9 +163,6 @@ export const ProjectLeads = () => {
     );
   }
 
-  console.log("Active profile", activeProfiles);
-  console.log("Schedule Meeting", scheduledMeetings);
-
   return (
     <div className="space-y-8 bg-gradient-to-br from-gray-50 to-purple-50 min-h-screen p-6">
       <div className="flex items-center justify-between">
@@ -199,9 +175,7 @@ export const ProjectLeads = () => {
           </p>
         </div>
         <Button
-          onClick={() => {
-            navigate("/projects/create");
-          }}
+          onClick={() => navigate("/projects/create")}
           className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
           size="lg"
         >
@@ -292,9 +266,7 @@ export const ProjectLeads = () => {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
                   <SelectItem value="Lead Sent">Lead Sent</SelectItem>
-                  <SelectItem value="Meeting Scheduled">
-                    Meeting Scheduled
-                  </SelectItem>
+                  <SelectItem value="Meeting Scheduled">Meeting Scheduled</SelectItem>
                   <SelectItem value="Closed">Closed</SelectItem>
                   <SelectItem value="On Hold">On Hold</SelectItem>
                 </SelectContent>
@@ -304,10 +276,32 @@ export const ProjectLeads = () => {
         </CardHeader>
         <CardContent className="pt-0">
           <ProjectLeadList
-            projects={filteredProjects}
+            projects={paginatedProjects}
             onUpdate={handleUpdateProjects}
             onEdit={handleEdit}
           />
+
+          <div className="flex justify-center items-center gap-4 pt-6">
+            <Button
+              className="text-blue-600 border-blue-500 hover:bg-blue-100"
+              variant="outline"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            >
+              Prev
+            </Button>
+            <span className="text-sm text-blue-700 font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              className="text-blue-600 border-blue-500 hover:bg-blue-100"
+              variant="outline"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            >
+              Next
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

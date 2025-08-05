@@ -445,9 +445,9 @@ export const Analytics = () => {
                   +15.3% from last month
                 </p> */}
               </div>
-              <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+              {/* <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
                 <IndianRupee className="h-6 w-6 text-green-600" />
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>

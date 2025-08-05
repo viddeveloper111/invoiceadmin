@@ -624,7 +624,8 @@ export const ClientList = ({
                       Contact Person
                     </p>
                     {/* <p>{client.contactPerson}</p> */}
-                    <p>{client.contactPerson || "N/A"}</p>
+                    <p>{(client.contactPerson && client.contactPerson.trim()) || (client.name && client.name.trim()) || "N/A"}</p>
+
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <p className="font-semibold text-gray-900">Email</p>
@@ -1034,7 +1035,7 @@ export const ClientList = ({
                         onClick={() => setChatUps(client.id)}
                       >
                         <MessageCircle className="h-4 w-4 mr-1" />
-                        Chat ({client.conversations || 0})
+                        Inbox  ({client.conversations || 0})
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">

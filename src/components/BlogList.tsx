@@ -583,10 +583,25 @@ export default function BlogList(): JSX.Element {
 
       {/* Loading, Error, No Blogs Found Messages */}
       {loading && (
-        <div className="text-center py-8">
-          <p className="text-xl text-gray-600">Loading blogs...</p>
+  <div className="space-y-4">
+    {[...Array(5)].map((_, index) => (
+      <div
+        key={index}
+        className="animate-pulse p-6 bg-white rounded-xl shadow-md space-y-4"
+      >
+        <div className="h-6 bg-gray-300 rounded w-3/4"></div>
+        <div className="flex space-x-4">
+          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
         </div>
-      )}
+        <div className="h-4 bg-gray-300 rounded w-full"></div>
+        <div className="h-4 bg-gray-300 rounded w-5/6"></div>
+      </div>
+    ))}
+  </div>
+)}
+
 
       {error && (
         <div className="text-center py-8 text-red-600">
