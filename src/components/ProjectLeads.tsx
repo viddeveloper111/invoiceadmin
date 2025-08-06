@@ -80,10 +80,12 @@ export const ProjectLeads = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  const baseURL = import.meta.env.VITE_API_URL;
   const fetchProjectProfiles = async () => {
     try {
-      const response = await axios.get("https://api.vidhema.com/projects");
+      const response = await axios.get(`${baseURL}/projects`);
       setProjectProfiles(response.data);
+      console.log('This is the response of the project fetching ',response)
     } catch (error) {
       console.log("Error fetching Project Profiles", error);
     }
@@ -95,7 +97,7 @@ export const ProjectLeads = () => {
 
   const addProjectProfile = async () => {
     try {
-      const response = await axios.get("https://api.vidhema.com/projects");
+      const response = await axios.get(`${baseURL}/projects`);
       setProjectProfiles(response.data);
       navigate("/projects");
     } catch (error) {

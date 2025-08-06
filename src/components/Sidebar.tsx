@@ -25,7 +25,8 @@ export const Sidebar = () => {
   });
 
   const handleUserClick = () => {
-    setModalOpen(true);
+    navigate('/profile')
+    // setModalOpen(true);
   };
 
   const handleUserUpdate = (updatedUser) => {
@@ -51,6 +52,22 @@ export const Sidebar = () => {
     { id: "blog", label: "Blogs", icon: Newspaper, path: "/blog" },
     { id: "allfollowup", label: "All Follow Ups", icon: Calendar, path: "/allfollowup" },
   ];
+
+  useEffect(()=>{
+    const handleStorageUpdate=()=>{
+      const updatedUser=localStorage.getItem('User')
+      if (updatedUser) {
+        setUser(JSON.parse(updatedUser));
+      }
+    }
+
+    // listen to the custom event
+    window.addEventListener('userUpdated',handleStorageUpdate)
+
+    return ()=>{
+        window.removeEventListener('userUpdated',handleStorageUpdate)
+    }
+  },[])
 
   return (
     <>

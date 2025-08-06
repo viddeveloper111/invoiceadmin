@@ -66,28 +66,39 @@ export const JobProfiles = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
+  const baseURL = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
+   useEffect(() => {
     const fetchJobProfiles = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3006/getAllJobProfiles?page=${currentPage}&limit=${limit}`
-        );
-        setJobProfiles(response.data.data || []);
-        setTotalPages(response.data.totalPages || 1);
+        await axios
+          .get(`${baseURL}/getAllJobProfiles?page=${currentPage}&limit=${limit}`)
+          .then((response) => {
+            console.log('This is fetch job with paginataion',response)
+            setJobProfiles(response.data.data);
+            // Assuming the API response includes total job count or total pages
+      const totalCount = response.data.totalCount; // Adjust based on your API response
+      setTotalPages(Math.ceil(totalCount / limit));
+          })
+          .catch((error) => {
+            console.log("Error to fetch jobProfilesData", error);
+          });
       } catch (error) {
-        console.log("Error to fetch jobProfilesData", error);
+        console.log(error);
       }
     };
     fetchJobProfiles();
   }, [currentPage]);
 
+ 
+  console.log('this is the jobprofile state value',jobProfiles)
   const addJobProfile = async () => {
     try {
       const response = await axios.get(
-        `https://api.vidhema.com/getAllJobProfiles?page=${currentPage}&limit=${limit}`
+        `${baseURL}/getAllJobProfiles?page=${currentPage}&limit=${limit}`
       );
       setJobProfiles(response.data.data || []);
+      console.log('This is the all job data after adding  ',response.data)
       navigate("/jobs");
     } catch (error) {
       console.log("Error fetching updated job profiles", error);
@@ -102,27 +113,59 @@ export const JobProfiles = () => {
     setJobProfiles(updatedProfiles);
   };
 
-  const sortedProfiles = [...jobProfiles].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  // const sortedProfiles = [...jobProfiles].sort(
+  //   (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  // );
+
+  let sortedProfiles: JobProfile[] = [];
+
+if (Array.isArray(jobProfiles)) {
+  sortedProfiles = [...jobProfiles].sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+}
 
-  const filteredProfiles = sortedProfiles.filter((profile) => {
-    const matchesSearch =
-      profile.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile?.clientId?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || profile.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
 
-  const activeProfiles = jobProfiles.filter(
-    (profile) => profile.status === "Active"
-  ).length;
+  // const filteredProfiles = sortedProfiles.filter((profile) => {
+  //   const matchesSearch =
+  //     profile.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     profile?.clientId?.name.toLowerCase().includes(searchTerm.toLowerCase());
+  //   const matchesStatus =
+  //     statusFilter === "all" || profile.status === statusFilter;
+  //   return matchesSearch && matchesStatus;
+  // });
 
-  const scheduledInterviews = jobProfiles.filter(
-    (profile) => profile.status === "Interview Scheduled"
-  ).length;
+  // const activeProfiles = jobProfiles.filter(
+  //   (profile) => profile.status === "Active"
+  // ).length;
 
+  // const scheduledInterviews = jobProfiles.filter(
+  //   (profile) => profile.status === "Interview Scheduled"
+  // ).length;
+
+  
+  // new 
+  const filteredProfiles = Array.isArray(sortedProfiles)
+  ? sortedProfiles.filter((profile) => {
+      const matchesSearch =
+        profile.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        profile?.clientId?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || profile.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+  : [];
+
+const activeProfiles = Array.isArray(jobProfiles)
+  ? jobProfiles.filter((profile) => profile.status === "Active").length
+  : 0;
+
+const scheduledInterviews = Array.isArray(jobProfiles)
+  ? jobProfiles.filter((profile) => profile.status === "Interview Scheduled").length
+  : 0;
+
+  
   const editData =
     location.pathname.startsWith("/jobs/edit") && params.id
       ? jobProfiles.find((p) => p._id === params.id) || null

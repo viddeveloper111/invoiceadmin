@@ -44,7 +44,7 @@ export const Login = ({ onLogin }: LoginProps) => {
 
       const baseURL = import.meta.env.VITE_API_URL;
 
-      // "https://api.vidhema.com/users/login",
+    
 
       // Now putting the axios request
       const result = await axios.post(`${baseURL}/users/login`, loginData, {

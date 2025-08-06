@@ -49,11 +49,12 @@ function transformVidhemaBlogToBlogPost(rawBlog: VidhemaRawBlog): BlogPost {
   return transformedBlog;
 }
 
+const baseURL = import.meta.env.VITE_API_URL;
 export async function fetchVidhemaBlogs(): Promise<BlogPost[]> {
 
   console.log("--- Calling fetchVidhemaBlogs function ---");
 
-  const VIDHEMA_API_URL = 'https://api.vidhema.com/blogs?filter=%7B%22order%22%3A%7B%22createdAt%22%3A-1%7D%2C%22skip%22%3A0%2C%22limit%22%3A10%7D';
+  const VIDHEMA_API_URL = `${baseURL}/blogs?filter=%7B%22order%22%3A%7B%22createdAt%22%3A-1%7D%2C%22skip%22%3A0%2C%22limit%22%3A10%7D`;
   const VIDHEMA_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmMGMxMDY1NGM1ZDUwMGY2NDM3YmQzMSIsImVtYWlsIjoic2FsZXNAdmlkaGVtYS5jb20iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NTI2NDQyNjIsImV4cCI6MTc1MjczMDY2Mn0.mpg--uAlcSkTXMWTZShBgq-p58gnlgPDv9bs8zniY8E";
 
   try {

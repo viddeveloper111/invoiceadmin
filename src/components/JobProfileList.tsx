@@ -168,7 +168,7 @@ export const JobProfileList = ({
 
     try {
       const res = await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${profileId}`,
+        `${baseURL}/updateJobProfile/${profileId}`,
         {
           chatMessages: updatedChat,
           conversations: (profile.conversations || 0) + 1,
@@ -231,7 +231,7 @@ export const JobProfileList = ({
       console.log("Converted to UTC in Job creation:", utcDateStr);
 
       const existingJob = await axios.get(
-        `https://api.vidhema.com/getJobProfileById/${profileId}`
+        `${baseURL}/getJobProfileById/${profileId}`
       );
 
       const existingTeamName = existingJob.data?.actionDetails?.teamName || [];
@@ -272,7 +272,7 @@ export const JobProfileList = ({
       console.log("Payload to update:", payload);
 
       const result = await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${profileId}`,
+        `${baseURL}/updateJobProfile/${profileId}`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -280,13 +280,13 @@ export const JobProfileList = ({
       console.log("Response from PUT:", result.data);
 
       const response = await axios.get(
-        `https://api.vidhema.com/getAllJobProfiles`
+        `${baseURL}/getAllJobProfiles`
       );
-      onUpdate(response.data);
+      onUpdate(response.data.data);
 
       setSendFollowUpDialog(null); // <- updated to match your new state
       setFollowupData({ description: "", datetime: "" });
-
+      console.log('This is send the followup after job ',response.data.data)
       toast({
         title: "Follow Up Added",
         description: `Followup description is addedd in Job profile `,
@@ -333,7 +333,7 @@ export const JobProfileList = ({
 
       await axios.put(
         // `${baseURL}/updateJobProfile/${id}`,
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         {
           // "actionDetails.followUpDate": newFollowupDate,
           "actionDetails.followUpDate": utcDateStr,
@@ -396,7 +396,7 @@ export const JobProfileList = ({
       // converted utcDateStr
       console.log("Converted to UTC:", utcDateStr);
       await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         {
           status: "Profile Sent",
           "actionDetails.markAsSend": true,
@@ -408,8 +408,8 @@ export const JobProfileList = ({
       );
       // Fetch the latest profiles from the backend
       const response = await axios.get(`${baseURL}/getAllJobProfiles`);
-
-      onUpdate(response.data);
+      console.log('This is the sendprofile to client after response',response.data.data)
+      onUpdate(response.data.data);
       setSendProfileDialog(null);
       setSelectedCandidate("");
       setSendDateTime("");
@@ -422,7 +422,7 @@ export const JobProfileList = ({
     if (!interviewDate) return;
     try {
       await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         {
           "interviewActionDetails.interviewDateTime": interviewDate,
           "interviewActionDetails.proceedToInterview": true,
@@ -432,9 +432,10 @@ export const JobProfileList = ({
       );
       // Fetch the latest profiles from the backend
       const response = await axios.get(
-        `https://api.vidhema.com/getAllJobProfiles`
+        `${baseURL}/getAllJobProfiles`
       );
-      onUpdate(response.data);
+      console.log('Added the interview shceduled after this job data',response.data.data)
+      onUpdate(response.data.data);
       setScheduleInterview(null);
       setInterviewDate("");
     } catch (error) {
@@ -445,17 +446,17 @@ export const JobProfileList = ({
   const closeJob = async (id: string) => {
     try {
       await axios.put(
-        `https://api.vidhema.com/updateJobProfile/${id}`,
+        `${baseURL}/updateJobProfile/${id}`,
         { status: "Closed" },
         { headers: { "Content-Type": "application/json" } }
       );
 
       // Fetch the latest profiles from the backend
       const response = await axios.get(
-        `https://api.vidhema.com/getAllJobProfiles`
+        `${baseURL}/getAllJobProfiles`
       );
-      onUpdate(response.data); // Update UI with fresh data
-      console.log("Job status updated to Closed");
+      onUpdate(response.data.data); // Update UI with fresh data
+      console.log("Job status updated to Closed",response.data.data);
     } catch (error) {
       console.error("Error updating job status:", error);
     }

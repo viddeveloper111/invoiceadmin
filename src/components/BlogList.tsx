@@ -53,7 +53,7 @@ const fetchSolarStationBlogs = async (page: number, limit: number, term: string,
     }
     return apiResponse.data.map(transform);
 };
-
+const baseURL = import.meta.env.VITE_API_URL;
 const fetchVidhemaBlogs = async (page: number, limit: number, term: string, accessToken: string, transform: (raw: any) => BlogPost): Promise<BlogPost[]> => {
     const vidhemaFilterObj: any = {
         order: { createdAt: -1 },
@@ -64,7 +64,7 @@ const fetchVidhemaBlogs = async (page: number, limit: number, term: string, acce
         vidhemaFilterObj.where = { title: { like: `.*${term}.*`, options: 'i' } };
     }
     const encodedFilter = encodeURIComponent(JSON.stringify(vidhemaFilterObj));
-    const url = `https://api.vidhema.com/blogs?filter=${encodedFilter}`;
+    const url = `${baseURL}/blogs?filter=${encodedFilter}`;
     const response = await fetch(url, {
         headers: {
             'access_token': accessToken,
@@ -75,7 +75,10 @@ const fetchVidhemaBlogs = async (page: number, limit: number, term: string, acce
         const errorData = await response.json();
         throw new Error(errorData.message || `Vidhema API Error: ${response.status} ${response.statusText}`);
     }
-    const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
+    const result = await response.json();
+    const rawVidhemaBlogs = Array.isArray(result) ? result : result.data; // Support both direct array or { data: [...] }
+
+    //const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
     if (!Array.isArray(rawVidhemaBlogs)) {
         throw new Error("Vidhema API response is not a valid array of blogs.");
     }
@@ -198,7 +201,7 @@ export default function BlogList(): JSX.Element {
          }
  
          const encodedFilter = encodeURIComponent(JSON.stringify(vidhemaFilterObj));
-         const url = `https://api.vidhema.com/blogs?filter=${encodedFilter}`;
+         const url = `${baseURL}/blogs?filter=${encodedFilter}`;
  
          const response = await fetch(url, {
            headers: {
@@ -211,7 +214,9 @@ export default function BlogList(): JSX.Element {
            throw new Error(errorData.message || `Vidhema API Error: ${response.status} ${response.statusText}`);
          }
          
-         const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
+        // const rawVidhemaBlogs: VidhemaApiResponse = await response.json();
+         const result = await response.json();
+  const rawVidhemaBlogs = Array.isArray(result) ? result : result.data; // Support both direct array or { data: [...] }
          console.log(
            `this is conosole rdt in vidm is ${currentPage}!`,rawVidhemaBlogs)
  
@@ -459,7 +464,7 @@ export default function BlogList(): JSX.Element {
             headers: { 'Content-Type': 'application/json' },
           });
         } else if (blogToDelete.website === 'vidhema.com') {
-          response = await fetch(`https://api.vidhema.com/blogs/${id}?access_token=${vidhemaAccessToken}`, {
+          response = await fetch(`${baseURL}/blogs/${id}?access_token=${vidhemaAccessToken}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
           });

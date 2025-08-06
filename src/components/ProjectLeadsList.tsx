@@ -158,7 +158,7 @@ export const ProjectLeadList = ({
 
     try {
       const res = await axios.put(
-        `https://api.vidhema.com/projects/${projectId}`,
+        `${baseURL}/projects/${projectId}`,
         {
           chatMessages: updatedChat,
           conversations: (project.conversations || 0) + 1,
@@ -239,7 +239,7 @@ export const ProjectLeadList = ({
       // converted utcDateStr
       console.log("Converted to UTC in Project  creation :", utcDateStr);
       await axios.put(
-        `https://api.vidhema.com/projects/${id}`,
+        `${baseURL}/projects/${id}`,
         {
           // "actionDetails.followUpDate": newFollowupDate,
           "actionDetails.followUpDate": utcDateStr,
@@ -247,7 +247,7 @@ export const ProjectLeadList = ({
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`https://api.vidhema.com/projects`);
+      const response = await axios.get(`${baseURL}/projects`);
 
       onUpdate(response.data);
       setEditingFollowup(null);
@@ -281,7 +281,7 @@ export const ProjectLeadList = ({
   //   }
   //   try {
   //     await axios.put(
-  //       `https://api.vidhema.com/projects/${id}`,
+  //       `${baseURL}/projects/${id}`,
   //       {
   //         status: "Lead Sent",
   //         "actionDetails.markAsSend": true,
@@ -291,7 +291,7 @@ export const ProjectLeadList = ({
   //       { headers: { "Content-Type": "application/json" } }
   //     );
   //     // Fetch the latest profiles from the backend
-  //     const response = await axios.get(`https://api.vidhema.com/projects`);
+  //     const response = await axios.get(`${baseURL}/projects`);
 
   //     onUpdate(response.data);
   //     setSendProfileDialog(null);
@@ -335,7 +335,7 @@ export const ProjectLeadList = ({
       //  console.log("Converted to UTC in Project  creation :", utcDateStr);
       // Let's say you already have the existing project data
       const existingProject = await axios.get(
-        `https://api.vidhema.com/projects/${id}`
+        `${baseURL}/projects/${id}`
       );
 
       const existingTeamName =
@@ -353,14 +353,14 @@ export const ProjectLeadList = ({
       };
 
       await axios.put(
-        `https://api.vidhema.com/projects/${id}`,
+        `${baseURL}/projects/${id}`,
 
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
       console.log("proposal", proposalDescription);
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`https://api.vidhema.com/projects`);
+      const response = await axios.get(`${baseURL}/projects`);
 
       onUpdate(response.data);
       setSendProfileDialog(null);
@@ -427,7 +427,7 @@ export const ProjectLeadList = ({
       console.log("Converted to UTC in Project creation:", utcDateStr);
 
       const existingProject = await axios.get(
-        `https://api.vidhema.com/projects/${projectId}`
+        `${baseURL}/projects/${projectId}`
       );
 
       const existingTeamName =
@@ -469,14 +469,14 @@ export const ProjectLeadList = ({
       console.log("Payload to update:", payload);
 
       const result = await axios.put(
-        `https://api.vidhema.com/projects/${projectId}`,
+        `${baseURL}/projects/${projectId}`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
 
       console.log("Response from PUT:", result.data);
 
-      const response = await axios.get(`https://api.vidhema.com/projects`);
+      const response = await axios.get(`${baseURL}/projects`);
       onUpdate(response.data);
 
       setSendFollowUpDialog(null); // <- updated to match your new state
@@ -524,7 +524,7 @@ export const ProjectLeadList = ({
       const utcMeetingDate = new Date(MeetingDate).toISOString();
       console.log("Converted Meeting Date to UTC:", utcMeetingDate);
       await axios.put(
-        `https://api.vidhema.com/projects/${id}`,
+        `${baseURL}/projects/${id}`,
         {
           // "MeetingActionDetails.MeetingDateTime": MeetingDate,
           "MeetingActionDetails.MeetingDateTime": utcMeetingDate, // send UTC
@@ -534,7 +534,7 @@ export const ProjectLeadList = ({
         { headers: { "Content-Type": "application/json" } }
       );
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`https://api.vidhema.com/projects`);
+      const response = await axios.get(`${baseURL}/projects`);
       onUpdate(response.data);
       setScheduleMeeting(null);
       setMeetingDate("");
@@ -559,13 +559,13 @@ export const ProjectLeadList = ({
   const closeProject = async (id: string) => {
     try {
       await axios.put(
-        `https://api.vidhema.com/projects/${id}`,
+        `${baseURL}/projects/${id}`,
         { status: "Closed" },
         { headers: { "Content-Type": "application/json" } }
       );
 
       // Fetch the latest profiles from the backend
-      const response = await axios.get(`https://api.vidhema.com/projects`);
+      const response = await axios.get(`${baseURL}/projects`);
       onUpdate(response.data); // Update UI with fresh data
       console.log(
         "this is closeproject in list page of project",

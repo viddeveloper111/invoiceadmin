@@ -67,9 +67,9 @@ export const JobProfileForm = ({
   useEffect(() => {
     const getAllClients = async () => {
       try {
-        const response = await axios.get("https://api.vidhema.com/clients");
-        setClients(response.data);
-        console.log(response.data, "client data");
+        const response = await axios.get(`${baseURL}/clients`);
+        setClients(response.data.data);
+        console.log(response.data.data, "client data");
       } catch (error) {
         console.log("error", error);
       }
@@ -177,29 +177,33 @@ export const JobProfileForm = ({
       return;
     }
 
-    let jdImageUrl=typeof formData.jdFile==='string' ? formData.jdFile : "";
+    console.log('Uploading to:', `${baseURL}/upload`);
 
-    if(formData.jdFile instanceof File)
-    {
-       const uploadData=new FormData()
-       uploadData.append("image", formData.jdFile); 
-       try {
-    const res = await axios.post("https://api.vidhema.com/upload", uploadData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    console.log('Response of image upload',res.data)
-    jdImageUrl = res.data.imageUrl;
-  } catch (uploadErr) {
-    console.error("Upload failed:", uploadErr);
-    toast({
-      title: "❌ File Upload Failed",
-      description: "Could not upload JD file.",
-      variant: "destructive",
-    });
-    return;
-  }
+    let jdImageUrl = typeof formData.jdFile === "string" ? formData.jdFile : "";
+
+    if (formData.jdFile instanceof File) {
+      const uploadData = new FormData();
+      uploadData.append("image", formData.jdFile);
+      try {
+        const res = await axios.post(
+          `${baseURL}/upload`,
+          uploadData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        console.log("Response of image upload", res.data);
+        jdImageUrl = res.data.imageUrl;
+      } catch (uploadErr) {
+        console.error("Upload failed:", uploadErr);
+        toast({
+          title: "❌ File Upload Failed",
+          description: "Could not upload JD file.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
-
 
     //  console.log("Raw Followup date creation of client (local):",formData.followUpDate);
     //   console.log("Udate followupdate in creation of client", formData.followUpDate);
@@ -219,11 +223,12 @@ export const JobProfileForm = ({
       // clientBudget: Number(formData.clientBudget.replace(/[^0-9.-]+/g, "")),
       clientBudget: Number(formData.clientBudget),
       status: formData.status,
-     // jd: formData.jdFile,
-     jd:jdImageUrl,
+      // jd: formData.jdFile,
+      jd: jdImageUrl,
       actionDetails: {
         candidateName: formData.candidateName,
         followUpDate: formData.followUpDate,
+        
         markAsSend: formData.status === "Profile Sent",
       },
     };
@@ -231,7 +236,7 @@ export const JobProfileForm = ({
     try {
       if (editData) {
         const response = await axios.put(
-          `https://api.vidhema.com/updateJobProfile/${editData._id}`,
+          `${baseURL}/updateJobProfile/${editData._id}`,
           payload
         );
         toast({
@@ -241,7 +246,7 @@ export const JobProfileForm = ({
         console.log("Responde data form backend when edit", response.data);
       } else {
         const response = await axios.post(
-          `https://api.vidhema.com/createJobProfile`,
+          `${baseURL}/createJobProfile`,
           payload
         );
         console.log("Edit time Payload", payload);
@@ -276,33 +281,32 @@ export const JobProfileForm = ({
     }
   };
 
-//   // new
-//  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-//   const file = e.target.files?.[0];
-//   if (!file) return;
+  //   // new
+  //  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
 
-//   const uploadData = new FormData();
-//   uploadData.append("image", file); // match this with your backend multer field name
+  //   const uploadData = new FormData();
+  //   uploadData.append("image", file); // match this with your backend multer field name
 
-//   try {
-//     const response = await axios.post("http://localhost:3006/upload", uploadData, {
-//       headers: {
-//         "Content-Type": "multipart/form-data",
-//       },
-//     });
+  //   try {
+  //     const response = await axios.post(`${baseURL}/upload`, uploadData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
 
-//     console.log("Upload success:", response.data);
+  //     console.log("Upload success:", response.data);
 
-//     // Update your form state with uploaded file URL or name
-//     setFormData((prev) => ({
-//       ...prev,
-//       jdFile: response.data.imageUrl || file.name,
-//     }));
-//   } catch (err) {
-//     console.error("Error uploading file:", err);
-//   }
-// };
-
+  //     // Update your form state with uploaded file URL or name
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       jdFile: response.data.imageUrl || file.name,
+  //     }));
+  //   } catch (err) {
+  //     console.error("Error uploading file:", err);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6">
@@ -623,8 +627,8 @@ export const JobProfileForm = ({
                       <Input
                         id="jdFile"
                         type="file"
-                       // accept=".pdf,.doc,.docx"
-                       accept="image/*"
+                        // accept=".pdf,.doc,.docx"
+                        accept="image/*"
                         onChange={handleFileUpload}
                         className="hidden"
                       />
@@ -637,14 +641,16 @@ export const JobProfileForm = ({
                         className="w-full h-12 border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 rounded-lg"
                       >
                         <Upload className="h-4 w-4 mr-2" />
-                        { "Upload JD File Image"}
+                        {"Upload JD File Image"}
                       </Button>
                       {/* 🌐 URL display below the button */}
-   {formData.jdFile && (
-  <div className="text-xs text-gray-500 truncate break-all">
-    {formData.jdFile instanceof File ? formData.jdFile.name : formData.jdFile}
-  </div>
-)}
+                      {formData.jdFile && (
+                        <div className="text-xs text-gray-500 truncate break-all">
+                          {formData.jdFile instanceof File
+                            ? formData.jdFile.name
+                            : formData.jdFile}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

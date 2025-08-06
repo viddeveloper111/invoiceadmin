@@ -100,6 +100,7 @@ export default function AddVidhemaBlogForm(): JSX.Element {
     }
   };
 
+  const baseURL = import.meta.env.VITE_API_URL;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -155,7 +156,7 @@ export default function AddVidhemaBlogForm(): JSX.Element {
         }
       });
 
-      const response = await fetch('https://api.vidhema.com/blogs', { // Confirm this endpoint
+      const response = await fetch(`${baseURL}/blogs`, { // Confirm this endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

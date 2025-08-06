@@ -127,7 +127,7 @@ export const ClientList = ({
 
   const baseURL = import.meta.env.VITE_API_URL;
 
-  //  old api `https://api.vidhema.com/clients/${id}`,
+ 
 
   const updateClient = async (id: string, updates: Partial<Client>) => {
     try {

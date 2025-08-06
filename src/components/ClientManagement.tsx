@@ -50,7 +50,7 @@ export const ClientManagement = () => {
   const itemsPerPage = 10;
 
   const navigate = useNavigate();
-  const baseURL = "http://localhost:3006";
+  const baseURL = import.meta.env.VITE_API_URL
 
   const fetchData = async (page = 1) => {
     try {
@@ -75,6 +75,7 @@ export const ClientManagement = () => {
       }));
 
       setClients(normalizedClients);
+      console.log('This is the noremalized client fetched from backend ',normalizedClients)
 
       if (response.data.pagination) {
         setCurrentPage(response.data.pagination.currentPage);
@@ -101,8 +102,12 @@ export const ClientManagement = () => {
       client.projectManager?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeClients = clients.filter((client) => client.status === "Active").length;
-  const pendingPayments = clients.filter((client) => client.paymentStatus === "Pending").length;
+  const activeClients = clients.filter(
+    (client) => client.status === "Active"
+  ).length;
+  const pendingPayments = clients.filter(
+    (client) => client.paymentStatus === "Pending"
+  ).length;
 
   return (
     <Routes>
@@ -146,8 +151,12 @@ export const ClientManagement = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Clients</p>
-                      <p className="text-3xl font-bold text-gray-900">{clients.length}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        Total Clients
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {clients.length}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
                       <Users className="h-6 w-6 text-blue-600" />
@@ -160,8 +169,12 @@ export const ClientManagement = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Active Clients</p>
-                      <p className="text-3xl font-bold text-green-600">{activeClients}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        Active Clients
+                      </p>
+                      <p className="text-3xl font-bold text-green-600">
+                        {activeClients}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
                       <TrendingUp className="h-6 w-6 text-green-600" />
@@ -174,8 +187,12 @@ export const ClientManagement = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Pending Payments</p>
-                      <p className="text-3xl font-bold text-orange-600">{pendingPayments}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        Pending Payments
+                      </p>
+                      <p className="text-3xl font-bold text-orange-600">
+                        {pendingPayments}
+                      </p>
                     </div>
                     <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
                       <TrendingUp className="h-6 w-6 text-orange-600" />
@@ -205,11 +222,14 @@ export const ClientManagement = () => {
               </CardHeader>
 
               <CardContent className="pt-0">
-                <ClientList clients={filteredClients} onUpdate={setClients} refetchClients={() => fetchData(currentPage)} />
+                <ClientList
+                  clients={filteredClients}
+                  onUpdate={setClients}
+                  refetchClients={() => fetchData(currentPage)}
+                />
 
                 {/* Pagination Controls */}
                 <div className="flex justify-center items-center mt-4 space-x-4">
-
                   <Button
                     onClick={() => fetchData(currentPage - 1)}
                     disabled={currentPage === 1}

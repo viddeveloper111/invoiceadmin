@@ -34,6 +34,7 @@ import EditBlog from './components/EditBlog';
 // Import your custom route wrappers
 import ProtectedRoute from "./Routes/ProtectedRoute";
 import PublicRoute from "./Routes/PublicRoute";
+import Profile from "./components/Profile";
 
 const queryClient = new QueryClient();
 
@@ -84,7 +85,12 @@ const App = () => {
                 {/* Update this route to use the new AddBlogPage component */}
                 <Route path="blog/add" element={<AddBlogPage />} /> {/* <--- CHANGED THIS LINE */}
                 <Route path="blog/edit/:slug" element={<EditBlog />} />
+
+                {/* new profile page route */}
+                 <Route path="profile" element={<Profile />} />
               </Route>
+
+              
 
               
             </Route>

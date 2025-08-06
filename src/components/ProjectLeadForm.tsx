@@ -127,13 +127,13 @@ export const ProjectLeadForm = ({
   useEffect(() => {
     const getAllClients = async () => {
       try {
-        const response = await axios.get("https://api.vidhema.com/clients");
-        setClients(response.data);
+        const response = await axios.get(`${baseURL}/clients`);
+        setClients(response.data.data);
         console.log(
           "This is project getting  data through projectlead form page",
-          response.data
+          response.data.data
         );
-        console.log(response.data, "client data");
+        console.log(response.data.data, "client data");
       } catch (error) {
         console.log("error", error);
       }
@@ -219,7 +219,7 @@ export const ProjectLeadForm = ({
            const uploadData=new FormData()
            uploadData.append("image", formData.projectDescriptionFile); 
            try {
-        const res = await axios.post("https://api.vidhema.com/upload", uploadData, {
+        const res = await axios.post(`${baseURL}/upload`, uploadData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         console.log('Response of image upload',res.data)
@@ -260,6 +260,7 @@ export const ProjectLeadForm = ({
         teamName: formData.teamName,
         followUpDate: formData.followUpDate,
         // followUpDate: utcDateStr,
+        lastfollowUpDate: formData.followUpDate || new Date().toISOString(), // Safe fallback
       },
       proposalDescription: "", // ✅ <-- add this explicitly
     };
@@ -282,7 +283,7 @@ export const ProjectLeadForm = ({
     try {
       if (editData) {
         const response = await axios.put(
-          `https://api.vidhema.com/projects/${editData._id}`,
+          `${baseURL}/projects/${editData._id}`,
           payload
         );
         console.log("This is response data of edit", response.data);
@@ -292,7 +293,7 @@ export const ProjectLeadForm = ({
         });
       } else {
         const response = await axios.post(
-          `https://api.vidhema.com/projects`,
+          `${baseURL}/projects`,
           payload
         );
         toast({

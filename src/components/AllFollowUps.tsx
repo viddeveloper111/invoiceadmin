@@ -268,11 +268,12 @@ export const AllFollowUps = () => {
   const handleChange = (field: string, value: string) => {
     setFilterForm((prev) => ({ ...prev, [field]: value }));
   };
-
+  
+  
   const getAllClients = async () => {
     try {
-      const response = await axios.get("https://api.vidhema.com/clients");
-      setClients(response.data);
+      const response = await axios.get(`${baseURL}/clients`);
+      setClients(response.data.data);
       console.log(`All Client Data `, clients);
     } catch (err) {
       console.log("Failed to fetch all clients", err);
@@ -309,13 +310,13 @@ export const AllFollowUps = () => {
   const getJobsData = async () => {
     try {
       const response = await axios.get(
-        `https://api.vidhema.com/getAllJobProfiles`
+        `${baseURL}/getAllJobProfiles`
       );
       console.log(
         "This is the jobs data getting in dashboard page",
         response.data
       );
-      setJobsValue(response.data);
+      setJobsValue(response.data.data);
       const activeJob = response.data.filter(
         (job) => job.status === "Active"
       ).length;
@@ -778,10 +779,10 @@ export const AllFollowUps = () => {
         "This is the clientData getting in dashoboard page",
         response.data
       );
-      setClientValue(response.data);
+      setClientValue(response.data.data);
       setTotalClients(response.data.length);
       // ✅ Get the actual list of partial payment clients
-      const partialPayments = response.data.filter(
+      const partialPayments = response.data.data.filter(
         (client: Client) => client.paymentStatus === "Partial"
       );
 
@@ -805,7 +806,7 @@ export const AllFollowUps = () => {
       setPartialPayementClient(newPartialPayement);
 
       // getting the newly created single client with sorting on the basis of creation
-      const AllClientData = [...response.data];
+      const AllClientData = [...response.data.data];
       // const newClient = AllClientData.sort((a, b) => {
       //   const dateA = new Date(a.createdAt).getTime();
       //   const dateB = new Date(b.createdAt).getTime();
@@ -829,7 +830,7 @@ export const AllFollowUps = () => {
       // now for the followup data
       const now = new Date().getTime();
       let futureFollowups: { client: Client; followup: any }[] = [];
-      response.data.forEach((client: Client) => {
+      response.data.data.forEach((client: Client) => {
         if (Array.isArray(client.followups)) {
           client.followups.forEach((f) => {
             const followupTime = new Date(f.datetime).getTime();

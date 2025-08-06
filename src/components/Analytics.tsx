@@ -276,37 +276,38 @@ export const Analytics = () => {
       currency: "INR",
     }).format(amount);
   };
-
+   
+  const baseURL = import.meta.env.VITE_API_URL;
   const getJobsData = async () => {
     try {
       const response = await axios.get(
-        "https://api.vidhema.com/getAllJobProfiles"
+        `${baseURL}/getAllJobProfiles`
       );
       console.log("This is Jobs data", response.data);
-      const activejob = response.data.filter((job) => job.status === "Active");
+      const activejob = response.data.data.filter((job) => job.status === "Active");
       console.log("this is active job data", activejob);
       setActiveJob(activejob);
 
       //  profile sent job
-      const profilesent = response.data.filter(
+      const profilesent = response.data.data.filter(
         (job) => job.status === "Profile Sent"
       );
       console.log("this is profile sent job", profilesent);
       setProfileSentJob(profilesent);
 
       //  interview job
-      const interviewjob = response.data.filter(
+      const interviewjob = response.data.data.filter(
         (job) => job.status === "Interview Scheduled"
       );
       console.log("this is interviewSent job", interviewjob);
       setInterviewJob(interviewjob);
       //  closed job
-      const closedjob = response.data.filter((job) => job.status === "Closed" );
+      const closedjob = response.data.data.filter((job) => job.status === "Closed" );
       console.log("this is Closed job", closedjob);
       setClosedJob(closedjob);
 
       //  onHold job
-      const onHoldjob = response.data.filter((job) => job.status === "On Hold");
+      const onHoldjob = response.data.data.filter((job) => job.status === "On Hold");
       console.log("this is ON Hold job", onHoldjob);
       setOnHoldJob(onHoldjob);
     } catch (error) {
@@ -316,9 +317,9 @@ export const Analytics = () => {
 
   const getClientData = async () => {
     try {
-      const response = await axios.get("https://api.vidhema.com/clients");
+      const response = await axios.get(`${baseURL}/clients`);
       console.log("This is all client data", response.data);
-      const paidClient = response.data.filter(
+      const paidClient = response.data.data.filter(
         (client) => client.paymentStatus === "Paid"
       );
       console.log("This is paid client data", paidClient);
@@ -335,15 +336,15 @@ export const Analytics = () => {
       setTotalRevenue(sum);
 
       // filter of client on the baisis of active inactive pending status
-      const activeclient = response.data.filter(
+      const activeclient = response.data.data.filter(
         (client) => client.status === "Active"
       );
       setActiveClient(activeclient);
-      const pendingclient = response.data.filter(
+      const pendingclient = response.data.data.filter(
         (client) => client.status === "Pending"
       );
       setPendingClient(pendingclient);
-      const inactiveclient = response.data.filter(
+      const inactiveclient = response.data.data.filter(
         (client) => client.status === "Inactive"
       );
       setInActiveClient(inactiveclient);
@@ -353,11 +354,11 @@ export const Analytics = () => {
       //   (client) => client.payementStatus === "Paid"
       // );
       setPaidPayementClient(paidClient);
-      const pendingpayementclient = response.data.filter(
+      const pendingpayementclient = response.data.data.filter(
         (client) => client.paymentStatus === "Pending"
       );
       setPendingPayementClient(pendingpayementclient);
-      const partialPayementclient = response.data.filter(
+      const partialPayementclient = response.data.data.filter(
         (client) => client.paymentStatus === "Partial"
       );
       setPartiaPayementClient(partialPayementclient);
@@ -369,7 +370,7 @@ export const Analytics = () => {
   const getProjectData=async()=>{
     try {
       const response = await axios.get(
-        "https://api.vidhema.com/projects"
+        `${baseURL}/projects`
       );
       console.log("This is Project data", response.data);
       const activeProject = response.data.filter((project) => project.status === "Active");

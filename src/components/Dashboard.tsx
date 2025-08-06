@@ -368,13 +368,13 @@ type ChatMessage = {
         "This is the jobs data getting in dashboard page",
         response.data
       );
-      setJobsValue(response.data);
-      const activeJob = response.data.filter(
+      setJobsValue(response.data.data);
+      const activeJob = response.data.data.filter(
         (job) => job.status === "Active"
       ).length;
       setActiveJobProfile(activeJob);
 
-      const AllJobsData = [...response.data];
+      const AllJobsData = [...response.data.data];
 
       // new
 
@@ -472,10 +472,10 @@ type ChatMessage = {
         "This is the clientData getting in dashoboard page",
         response.data
       );
-      setClientValue(response.data);
-      setTotalClients(response.data.length);
+      setClientValue(response.data.data);
+      setTotalClients(response.data.data.length);
       // ✅ Get the actual list of partial payment clients
-      const partialPayments = response.data.filter(
+      const partialPayments = response.data.data.filter(
         (client: Client) => client.paymentStatus === "Partial" || client.paymentStatus === "Pending"
       );
 
@@ -499,7 +499,7 @@ type ChatMessage = {
       setPartialPayementClient(newPartialPayement);
 
       // getting the newly created single client with sorting on the basis of creation
-      const AllClientData = [...response.data];
+      const AllClientData = [...response.data.data];
       // const newClient = AllClientData.sort((a, b) => {
       //   const dateA = new Date(a.createdAt).getTime();
       //   const dateB = new Date(b.createdAt).getTime();
@@ -524,7 +524,7 @@ type ChatMessage = {
       // now for the followup data
       const now = new Date().getTime();
       let futureFollowups: { client: Client; followup: any }[] = [];
-      response.data.forEach((client: Client) => {
+      response.data.data.forEach((client: Client) => {
         if (Array.isArray(client.followups)) {
           client.followups.forEach((f) => {
             const followupTime = new Date(f.datetime).getTime();

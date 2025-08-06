@@ -72,7 +72,7 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
 
   const baseURL = import.meta.env.VITE_API_URL;
 
-  //  oldapi = https://api.vidhema.com/clients
+ 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,7 +220,8 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
         headers: { "Content-Type": "application/json" },
       });
 
-      const savedClientFromDb = response.data;
+      console.log('This is response after submit the data of client creation',response.data.data)
+      const savedClientFromDb = response.data.data;
 
       // ✅ Normalize client and attach frontend defaults
       const newClient = {

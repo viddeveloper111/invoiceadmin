@@ -37,7 +37,8 @@ export const UpdateUserModal = ({
       setPassword("");
     }
   }, [open, user]);
-
+ 
+  const baseURL = import.meta.env.VITE_API_URL;
   const handleSubmit = async () => {
     if (!user?.id) {
       toast.error("User ID is missing");
@@ -48,7 +49,7 @@ export const UpdateUserModal = ({
     try {
       const token = localStorage.getItem("Token");
       const res = await axios.put(
-        `http://localhost:3006/users/${user.id}`,
+        `${baseURL}/users/${user.id}`,
         { name, password },
         {
           headers: { Authorization: `Bearer ${token}` },
