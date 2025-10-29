@@ -41,31 +41,35 @@ export const Sidebar = () => {
     navigate("/login");
   };
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  const isActive = (path: string) => {
+    if (location.pathname === path) return true;
+    return location.pathname.startsWith(path + "/");
+  };
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { id: "invoice", label: "Invoice Generator", icon: Users, path: "/invoice" },
     { id: "invoicelist", label: "Invoice List", icon: Users, path: "/invoicelist" },
-    { id: "blog", label: "Clients", icon: Newspaper, path: "/blog" },
+    { id: "client", label: "Clients", icon: Newspaper, path: "/client" },
     { id: "products", label: "Products", icon: Newspaper, path: "/products" },
+    { id: "blog", label: "Blogs", icon: Newspaper, path: "/blog" },
   ];
 
-  useEffect(()=>{
-    const handleStorageUpdate=()=>{
-      const updatedUser=localStorage.getItem('User')
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      const updatedUser = localStorage.getItem('User')
       if (updatedUser) {
         setUser(JSON.parse(updatedUser));
       }
     }
 
     // listen to the custom event
-    window.addEventListener('userUpdated',handleStorageUpdate)
+    window.addEventListener('userUpdated', handleStorageUpdate)
 
-    return ()=>{
-        window.removeEventListener('userUpdated',handleStorageUpdate)
+    return () => {
+      window.removeEventListener('userUpdated', handleStorageUpdate)
     }
-  },[])
+  }, [])
 
   return (
     <>
@@ -87,11 +91,10 @@ export const Sidebar = () => {
                 <Link to={item.path} key={item.id}>
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start h-12 px-4 transition-all duration-200 ${
-                      isActive(item.path)
+                    className={`w-full justify-start h-12 px-4 transition-all duration-200 ${isActive(item.path)
                         ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:from-blue-700 hover:to-purple-700"
                         : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-                    }`}
+                      }`}
                   >
                     {Icon && <Icon className="h-5 w-5 mr-3" />}
                     {item.label}

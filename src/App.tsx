@@ -25,6 +25,7 @@ import { ClientList } from "./components/ClientList";
 import { ClientManagement } from "./components/ClientManagement";
 import { ClientForm } from "./components/ClientForm";
 import {InvoiceList} from "./pages/InvoiceList";
+import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient();
 
@@ -64,15 +65,20 @@ const App = () => {
              
                  <Route path="profile" element={<Profile />} />
 
-                     <Route path="blog" element={<ClientManagement />} />
+                     <Route path="blog" element={<Blog />} />
                 {/* Update this route to use the new AddBlogPage component */}
-                <Route path="blog/create" element={<ClientForm />} /> {/* <--- CHANGED THIS LINE */}
+                <Route path="blog/create" element={<AddProductPage />} /> {/* <--- CHANGED THIS LINE */}
                 <Route path="blog/edit/:slug" element={<EditBlog />} />
+                     
+                     <Route path="client" element={<ClientManagement />} />
+                {/* Update this route to use the new AddBlogPage component */}
+                <Route path="client/create" element={<ClientForm />} /> {/* <--- CHANGED THIS LINE */}
+                <Route path="client/edit/:id" element={<ClientForm />} />
                  
                      <Route path="products" element={<ProductList />} />
                 {/* Update this route to use the new AddBlogPage component */}
                 <Route path="products/create" element={<AddProductPage />} /> {/* <--- CHANGED THIS LINE */}
-                <Route path="blog/edit/:slug" element={<EditBlog />} />
+                <Route path="products/edit/:id" element={<AddProductPage />} />
               </Route>
 
               

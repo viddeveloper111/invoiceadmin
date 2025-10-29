@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,24 +18,64 @@ import {
   Globe,
   Route,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface ClientFormProps {
   onSave: (data: any) => void;
   onCancel: () => void;
+  isEdit?: boolean;
 }
 
-export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
+export const ClientForm = ({ onSave, onCancel, isEdit }: ClientFormProps) => {
+  const { id } = useParams();
+
   const [formData, setFormData] = useState({
     name: "",
     address: "",
     gstin: "",
     stateName: "",
-   
+
   });
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   const baseURL = import.meta.env.VITE_API_URL;
+
+  // ✅ Fetch client data for edit mode
+  useEffect(() => {
+    if (id) {
+      const fetchClient = async () => {
+        try {
+          setIsLoading(true);
+
+          const token = JSON.parse(localStorage.getItem("Token") || "null");
+          const { data } = await axios.get(`${baseURL}/api/clients/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          setFormData({
+            name: data.name || "",
+            address: data.address || "",
+            gstin: data.gstin || "",
+            stateName: data.stateName || "",
+          });
+        } catch (error: any) {
+          console.error("Error fetching client:", error);
+          toast({
+            title: "❌ Error",
+            description:
+              error?.response?.data?.message ||
+              "Failed to load client details.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchClient();
+    }
+  }, [id, baseURL]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -86,19 +126,39 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
       address: formData.address,
       gstin: formData.gstin,
       stateName: formData.stateName,
-      
+
     };
 
-    try {
-      const res = await axios.post(`${baseURL}/api/clients`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+    const token = JSON.parse(localStorage.getItem("Token") || "null");
 
-      toast({
-        title: "✅ Client Added",
-        description: "The client has been added successfully.",
-      });
-      navigate("/blog");
+    try {
+      setIsLoading(true);
+
+      if (id) {
+        // ✅ Update existing client
+        await axios.put(`${baseURL}/api/clients/${id}`, formData, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        toast({
+          title: "✅ Client Updated",
+          description: "The client details have been updated successfully.",
+        });
+      } else {
+        // ✅ Add new client
+        const res = await axios.post(`${baseURL}/api/clients`, payload, {
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+        });
+
+        toast({
+          title: "✅ Client Added",
+          description: "The client has been added successfully.",
+        });
+      }
+      navigate("/client");
       // onSave(res.data.data);
       // onCancel();
     } catch (error: any) {
@@ -120,7 +180,7 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            onClick={onCancel}
+            onClick={() => navigate("/client")}
             className="hover:bg-white/60 border border-gray-200"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -128,10 +188,12 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Add New Client
+              {id ? "Edit Client" : "Add New Client"}
             </h1>
             <p className="text-gray-600 text-sm mt-1">
-              Fill in the client’s business and contact details
+              {id
+                ? "Update the client’s business and contact details"
+                : "Fill in the client’s business and contact details"}
             </p>
           </div>
         </div>
@@ -141,7 +203,7 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
           <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
             <CardTitle className="text-xl font-semibold flex items-center gap-2">
               <User className="h-5 w-5" />
-              Client Information
+              {id ? "Edit Client Details" : "New Client Details"}
             </CardTitle>
           </CardHeader>
 
@@ -207,7 +269,7 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                 </div>
               </div>
 
-           
+
 
               {/* Buttons */}
               <div className="flex gap-4 pt-4">
@@ -215,12 +277,16 @@ export const ClientForm = ({ onSave, onCancel }: ClientFormProps) => {
                   type="submit"
                   className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-md"
                 >
-                  💾 Save Client
+                  {isLoading
+                    ? "Saving..."
+                    : id
+                    ? "💾 Update Client"
+                    : "💾 Save Client"}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={onCancel}
+                  onClick={() => navigate("/client")}
                   className="flex-1 h-12 border-2 border-gray-300 rounded-lg font-semibold"
                 >
                   ❌ Cancel

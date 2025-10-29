@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,14 +6,16 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import axios from "axios";
 import { ArrowLeft, Tag, DollarSign, Cpu, Percent } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface ProductFormProps {
   onSave: (data: any) => void;
   onCancel: () => void;
+  isEdit?: boolean;
 }
 
-export const AddProductPage = ({ onSave, onCancel }: ProductFormProps) => {
+export const AddProductPage = ({ onSave, onCancel, isEdit }: ProductFormProps) => {
+  const { id } = useParams();
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -22,7 +24,44 @@ export const AddProductPage = ({ onSave, onCancel }: ProductFormProps) => {
   });
 
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const baseURL = import.meta.env.VITE_API_URL;
+
+  // ✅ Fetch client data for edit mode
+  useEffect(() => {
+    if (id) {
+      const fetchClient = async () => {
+        try {
+          setIsLoading(true);
+
+          const token = JSON.parse(localStorage.getItem("Token") || "null");
+          const { data } = await axios.get(`${baseURL}/api/products/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          setFormData({
+            name: data.name || "",
+            price: data.price || "",
+            model: data.model || "",
+            gst: data.gst || "",
+          });
+        } catch (error: any) {
+          console.error("Error fetching products:", error);
+          toast({
+            title: "❌ Error",
+            description:
+              error?.response?.data?.message ||
+              "Failed to load products details.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchClient();
+    }
+  }, [id, baseURL]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -80,16 +119,35 @@ export const AddProductPage = ({ onSave, onCancel }: ProductFormProps) => {
       gst: Number(formData.gst),
     };
 
+    const token = JSON.parse(localStorage.getItem("Token") || "null");
+
     try {
-      const res = await axios.post(`${baseURL}/api/products`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+      setIsLoading(true);
 
-      toast({
-        title: "✅ Product Added",
-        description: "The product has been added successfully.",
-      });
+      if (id) {
+        // Edit mode - Update existing product
+        await axios.put(`${baseURL}/api/products/${id}`, payload, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
+        toast({
+          title: "✅ Product Updated",
+          description: "The product details have been updated successfully.",
+        });
+      } else {
+        // Add mode - Create new product
+        const res = await axios.post(`${baseURL}/api/products`, payload, {
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+        });
+
+        toast({
+          title: "✅ Product Added",
+          description: "The product has been added successfully.",
+        });
+      }
       navigate("/products");
     } catch (error: any) {
       console.error("Error adding product:", error);
@@ -110,7 +168,7 @@ export const AddProductPage = ({ onSave, onCancel }: ProductFormProps) => {
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            onClick={onCancel}
+            onClick={() => navigate("/products")}
             className="hover:bg-white/60 border border-gray-200"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -118,7 +176,7 @@ export const AddProductPage = ({ onSave, onCancel }: ProductFormProps) => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Add New Product
+              {id ? "Edit Product" : "Add New Product"}              
             </h1>
             <p className="text-gray-600 text-sm mt-1">
               Fill in the product’s details below
@@ -209,7 +267,7 @@ export const AddProductPage = ({ onSave, onCancel }: ProductFormProps) => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={onCancel}
+                  onClick={() => navigate("/products")}
                   className="flex-1 h-12 border-2 border-gray-300 rounded-lg font-semibold"
                 >
                   ❌ Cancel

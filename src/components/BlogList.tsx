@@ -17,6 +17,16 @@ import axios from "axios";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { AddProductPage } from "./../pages/AddBlogPage";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 
 interface Product {
   id: string;
@@ -28,6 +38,8 @@ interface Product {
 
 export const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -69,6 +81,17 @@ export const ProductList = () => {
     fetchData(currentPage);
   };
 
+  const handleView = (client: Product) => {
+    setSelectedProduct(client);
+    setIsViewOpen(true);
+  };
+
+  // Edit client details
+  const handleEdit = (product: Product) => {
+    navigate(`/products/edit/${product.id}`, { state: { product } });
+  };
+
+
   // Delete product
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
@@ -107,6 +130,17 @@ export const ProductList = () => {
         }
       />
 
+      <Route
+        path="edit/:id"
+        element={
+          <AddProductPage
+            onSave={fetchData}
+            onCancel={() => navigate("/products")}
+            isEdit
+          />
+        }
+      />
+
       {/* ✅ Product Management Dashboard */}
       <Route
         path="/"
@@ -134,7 +168,7 @@ export const ProductList = () => {
             </div>
 
             {/* Stats Section */}
-       
+
             {/* ✅ Product Table */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
@@ -185,16 +219,14 @@ export const ProductList = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() =>
-                                  alert(JSON.stringify(product, null, 2))
-                                }
+                                onClick={() => handleView(product)}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="default"
-                                onClick={() => alert(`Edit ${product.name}`)}
+                                onClick={() => handleEdit(product)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -244,6 +276,56 @@ export const ProductList = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+              <DialogContent className="max-w-md rounded-2xl shadow-2xl border bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-all duration-300">
+                {selectedProduct && (
+                  <>
+                    <DialogHeader className="text-center pb-4 border-b">
+                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        {selectedProduct.name}
+                      </DialogTitle>
+                      <DialogDescription className="text-gray-600 dark:text-gray-400">
+                        Product Details
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 mt-4 text-gray-700 dark:text-gray-300">
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium">Model</span>
+                        <span className="text-right">{selectedProduct.model || "—"}</span>
+                      </div>
+
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium">Price</span>
+                        <span className="text-right">₹{selectedProduct.price || "—"}</span>
+                      </div>
+
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium">GST (%)</span>
+                        <span className="text-right">{selectedProduct.gst || "—"}%</span>
+                      </div>
+
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium">Product ID</span>
+                        <span className="text-right text-gray-500 text-sm">{selectedProduct.id}</span>
+                      </div>
+                    </div>
+
+                    <DialogFooter className="flex justify-end mt-6">
+                      <Button
+                        variant="secondary"
+                        onClick={() => setIsViewOpen(false)}
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:opacity-90"
+                      >
+                        Close
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
+
           </div>
         }
       />

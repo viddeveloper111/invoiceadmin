@@ -7,6 +7,16 @@ import { ClientForm } from "./ClientForm";
 import axios from "axios";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 
 interface Client {
   id: string;
@@ -18,6 +28,9 @@ interface Client {
 
 export const ClientManagement = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -58,12 +71,42 @@ export const ClientManagement = () => {
     fetchData(currentPage);
   };
 
+  // View client details
+  const handleView = (client: Client) => {
+    setSelectedClient(client);
+    setIsViewOpen(true);
+  };
+
+
+  // Edit client details
+  const handleEdit = (client: Client) => {
+    navigate(`/client/edit/${client.id}`, { state: { client } });
+  };
+
   // Delete client
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this client?")) return;
 
     try {
-      await axios.delete(`${baseURL}/api/clients/${id}`);
+      const token = JSON.parse(localStorage.getItem("Token") || "null");
+      const user = JSON.parse(localStorage.getItem("User") || "null");
+      console.log("Using token:", token);
+      console.log("User info:", user);
+
+      if (!token) {
+        toast({
+          title: "⚠️ Unauthorized",
+          description: "You must be logged in to perform this action.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await axios.delete(`${baseURL}/api/clients/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       toast({
         title: "🗑️ Deleted",
         description: "Client deleted successfully.",
@@ -94,7 +137,18 @@ export const ClientManagement = () => {
         element={
           <ClientForm
             onSave={addClient}
+            onCancel={() => navigate("/client")}
+          />
+        }
+      />
+
+      <Route
+        path="edit/:id"
+        element={
+          <ClientForm
+            onSave={fetchData}
             onCancel={() => navigate("/clients")}
+            isEdit
           />
         }
       />
@@ -126,7 +180,7 @@ export const ClientManagement = () => {
             </div>
 
             {/* Stats Section */}
-         
+
 
             {/* ✅ Client Table */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
@@ -178,16 +232,15 @@ export const ClientManagement = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() =>
-                                  alert(JSON.stringify(client, null, 2))
-                                }
+                                onClick={() => handleView(client)}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="default"
-                                onClick={() => alert(`Edit ${client.name}`)}
+                                // onClick={() => alert(`Edit ${client.name}`)}
+                                onClick={() => handleEdit(client)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -237,6 +290,54 @@ export const ClientManagement = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* ✅ View Client Dialog */}
+            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+              <DialogContent className="max-w-md rounded-2xl shadow-2xl border bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+                {selectedClient && (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                        {selectedClient.name}
+                      </DialogTitle>
+                      <DialogDescription className="text-gray-500 dark:text-gray-400">
+                        Client Details
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3 mt-2">
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">Address</span>
+                        <span className="text-gray-600 dark:text-gray-400 text-right">
+                          {selectedClient.address || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">GSTIN</span>
+                        <span className="text-gray-600 dark:text-gray-400 text-right">
+                          {selectedClient.gstin || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between border-b pb-2">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">State</span>
+                        <span className="text-gray-600 dark:text-gray-400 text-right">
+                          {selectedClient.stateName || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <DialogFooter className="flex justify-end mt-4">
+                      <Button variant="secondary" onClick={() => setIsViewOpen(false)}>
+                        Close
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
+
           </div>
         }
       />
