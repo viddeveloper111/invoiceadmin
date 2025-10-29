@@ -6,6 +6,8 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Trash2, PlusCircle } from "lucide-react";
 import { useParams } from "react-router-dom";
+import { ToWords } from "to-words";
+
 interface InvoiceData {
     invoiceNo: string;
     date: string;
@@ -21,8 +23,16 @@ interface InvoiceData {
     destination: string;
     termsOfDelivery: string;
 }
-
-const Invoice = () => {
+import logo from "/miceglobals-logo.png"; // <-- Add your logo in assets folder
+const toWords = new ToWords({
+  localeCode: "en-IN",
+  converterOptions: {
+    currency: true,
+    ignoreDecimal: false,
+    ignoreZeroCurrency: false,
+  },
+});
+const Invoice = ({}) => {
     const { id } = useParams(); // 👈 get invoice id from URL
 
     const baseURL = import.meta.env.VITE_API_URL;
@@ -172,9 +182,11 @@ const Invoice = () => {
 
 
     const { subTotal, cgst, sgst, totalAmount } = calculateTotals();
+const amountInWords = totalAmount > 0 ? toWords.convert(totalAmount) : "";
 
     // ✅ Generate PDF
     // ✅ Save Invoice + Generate PDF
+    
     const generatePDF = async () => {
         try {
             const { subTotal, cgst, sgst, totalAmount } = calculateTotals();
@@ -455,143 +467,172 @@ const Invoice = () => {
             </div>
 
             {/* Invoice Preview */}
-            <div
-                id="invoice-preview"
-                className="bg-white shadow-xl p-8 rounded-xl border text-sm leading-relaxed"
-            >
-                {/* Header */}
-                <h2 className="text-center text-lg font-semibold mb-3 uppercase">
-                    Tax Invoice
-                </h2>
+        <div
+      id="invoice-preview"
+      className="bg-white text-[13px] leading-relaxed border border-gray-400 shadow-md p-8 rounded-md w-[794px] mx-auto"
+      style={{ fontFamily: "Arial, sans-serif" }}
+    >
+      {/* Header */}
+      <div className="text-center border-b border-gray-500 pb-1 mb-2">
+        <h2 className="uppercase text-[16px] font-semibold">Tax Invoice</h2>
+      </div>
 
-                {/* Invoice & Company Info */}
-                <div className="grid grid-cols-2 gap-4 border-b pb-2">
-                    <div>
-                        <p className="font-bold text-gray-800">Mice Globals Rajasthan</p>
-                        <p>413 Sun & Moon Chambers, Gopal Bari, Jaipur</p>
-                        <p>GSTIN/UIN: 08ABEFM9256H2ZV</p>
-                        <p>State Name: Rajasthan, Code: 08</p>
-                        <p>E-Mail: info@miceglobals.in</p>
-                    </div>
-                    <div className="text-right text-sm space-y-1">
-                        <p><strong>Invoice No:</strong> {invoiceData.invoiceNo || "-"}</p>
-                        <p><strong>Dated:</strong> {invoiceData.date || "-"}</p>
-                        <p><strong>Delivery Note:</strong> {invoiceData.deliveryNote || "-"}</p>
-                        <p><strong>Mode/Terms of Payment:</strong> {invoiceData.paymentTerms || "-"}</p>
-                        <p><strong>Reference No. & Date:</strong> {invoiceData.referenceNo || "-"}</p>
-                        <p><strong>Other References:</strong> {invoiceData.otherReferences || "-"}</p>
-                    </div>
-                </div>
+      {/* Company and Invoice Info */}
+      <div className="grid grid-cols-2 border border-gray-400">
+        <div className="p-3">
+          <img src={logo} alt="Company Logo" className="h-12 mb-2" />
+          <p className="font-bold text-gray-800 text-sm">Mice Globals Rajasthan</p>
+          <p>413 Sun & Moon Chambers Gopal Bari Jaipur</p>
+          <p>GSTIN/UIN: 08ABEFM9256H2ZV</p>
+          <p>State Name: Rajasthan, Code: 08</p>
+          <p>E-Mail: info@miceglobals.in</p>
+        </div>
+        <div className="p-3 border-l border-gray-400">
+          <table className="w-full text-sm">
+         <tbody>
+  <tr className="border border-gray-400">
+    <td className="border border-gray-400 font-semibold pr-2 p-1">Invoice No.</td>
+    <td className="border border-gray-400 p-1">{invoiceData.invoiceNo || "-"}</td>
+  </tr>
+  <tr className="border border-gray-400">
+    <td className="border border-gray-400 font-semibold pr-2 p-1">Dated</td>
+    <td className="border border-gray-400 p-1">{invoiceData.date || "-"}</td>
+  </tr>
+  <tr className="border border-gray-400">
+    <td className="border border-gray-400 font-semibold pr-2 p-1">Delivery Note</td>
+    <td className="border border-gray-400 p-1">{invoiceData.deliveryNote || "-"}</td>
+  </tr>
+  <tr className="border border-gray-400">
+    <td className="border border-gray-400 font-semibold pr-2 p-1">Mode/Terms of Payment</td>
+    <td className="border border-gray-400 p-1">{invoiceData.paymentTerms || "-"}</td>
+  </tr>
+  <tr className="border border-gray-400">
+    <td className="border border-gray-400 font-semibold pr-2 p-1">Reference No. & Date</td>
+    <td className="border border-gray-400 p-1">{invoiceData.referenceNo || "-"}</td>
+  </tr>
+  <tr className="border border-gray-400">
+    <td className="border border-gray-400 font-semibold pr-2 p-1">Other References</td>
+    <td className="border border-gray-400 p-1">{invoiceData.otherReferences || "-"}</td>
+  </tr>
+</tbody>
 
-                {/* Client Info */}
-                {selectedClient && (
-                    <div className="grid grid-cols-2 mt-3 border-b pb-3">
-                        <div>
-                            <p className="font-semibold mb-1">Consignee (Ship to)</p>
-                            <p>{selectedClient.name}</p>
-                            <p>{selectedClient.address}</p>
-                            <p>GSTIN/UIN: {selectedClient.gstin}</p>
-                            <p>State Name: {selectedClient.stateName}</p>
-                        </div>
-                        <div>
-                            <p className="font-semibold mb-1">Buyer (Bill to)</p>
-                            <p>{selectedClient.name}</p>
-                            <p>{selectedClient.address}</p>
-                            <p>GSTIN/UIN: {selectedClient.gstin}</p>
-                            <p>State Name: {selectedClient.stateName}</p>
-                        </div>
-                    </div>
-                )}
+          </table>
+        </div>
+      </div>
 
-                {/* Transport & Dispatch Info */}
-                <div className="grid grid-cols-2 mt-3 border-b pb-3">
-                    <div>
-                        <p><strong>Buyer’s Order No:</strong> {invoiceData.buyersOrderNo || "-"}</p>
-                        <p><strong>Dated:</strong> {invoiceData.orderDated || "-"}</p>
-                        <p><strong>Dispatch Doc No:</strong> {invoiceData.dispatchDocNo || "-"}</p>
-                        <p><strong>Delivery Note Date:</strong> {invoiceData.deliveryNoteDate || "-"}</p>
-                    </div>
-                    <div className="text-right">
-                        <p><strong>Dispatched Through:</strong> {invoiceData.dispatchedThrough || "-"}</p>
-                        <p><strong>Destination:</strong> {invoiceData.destination || "-"}</p>
-                        <p><strong>Terms of Delivery:</strong> {invoiceData.termsOfDelivery || "-"}</p>
-                    </div>
-                </div>
+      {/* Consignee & Buyer Info */}
+      {selectedClient && (
+        <div className="grid grid-cols-2 border-x border-b border-gray-400">
+          <div className="p-3 border-r border-gray-400">
+            <p className="font-semibold mb-1">Consignee (Ship To)</p>
+            <p>{selectedClient.name}</p>
+            <p>{selectedClient.address}</p>
+            <p>GSTIN/UIN: {selectedClient.gstin}</p>
+            <p>State Name: {selectedClient.stateName}</p>
+          </div>
+          <div className="p-3">
+            <p className="font-semibold mb-1">Buyer (Bill To)</p>
+            <p>{selectedClient.name}</p>
+            <p>{selectedClient.address}</p>
+            <p>GSTIN/UIN: {selectedClient.gstin}</p>
+            <p>State Name: {selectedClient.stateName}</p>
+          </div>
+        </div>
+      )}
 
-                {/* Product Table */}
-                {selectedProducts.length > 0 && (
-                    <table className="w-full mt-4 border border-gray-400 text-sm">
-                        <thead className="bg-gray-100 font-semibold">
-                            <tr>
-                                <th className="border border-gray-400 p-2">Sl No</th>
-                                <th className="border border-gray-400 p-2">Particulars</th>
-                                <th className="border border-gray-400 p-2">Qty</th>
-                                <th className="border border-gray-400 p-2">GST %</th>
-                                <th className="border border-gray-400 p-2">Amount (₹)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {selectedProducts.map((item, i) => {
-                                const p = products.find((x) => x._id === item.productId);
-                                if (!p) return null;
-                                const total = p.price * item.quantity;
-                                return (
-                                    <tr key={i}>
-                                        <td className="border p-2 text-center">{i + 1}</td>
-                                        <td className="border p-2">{p.name} ({p.model})</td>
-                                        <td className="border p-2 text-center">{item.quantity}</td>
-                                        <td className="border p-2 text-center">{p.gst}%</td>
-                                        <td className="border p-2 text-right">{total.toFixed(2)}</td>
-                                    </tr>
-                                );
-                            })}
-                            {selectedClient?.stateName?.toLowerCase() === "rajasthan" ? (
-                                <>
-                                    <tr>
-                                        <td colSpan={4} className="border p-2 text-right font-semibold">
-                                            CGST (9%)
-                                        </td>
-                                        <td className="border p-2 text-right">{cgst.toFixed(2)}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={4} className="border p-2 text-right font-semibold">
-                                            SGST (9%)
-                                        </td>
-                                        <td className="border p-2 text-right">{sgst.toFixed(2)}</td>
-                                    </tr>
-                                </>
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="border p-2 text-right font-semibold">
-                                        IGST (18%)
-                                    </td>
-                                    <td className="border p-2 text-right">{sgst.toFixed(2)}</td>
-                                </tr>
-                            )}
+      {/* Dispatch Info */}
+      <div className="grid grid-cols-2 border-x border-b border-gray-400">
+        <div className="p-3 border-r border-gray-400">
+          <p><strong>Buyer’s Order No:</strong> {invoiceData.buyersOrderNo || "-"}</p>
+          <p><strong>Dated:</strong> {invoiceData.orderDated || "-"}</p>
+          <p><strong>Dispatch Doc No:</strong> {invoiceData.dispatchDocNo || "-"}</p>
+          <p><strong>Delivery Note Date:</strong> {invoiceData.deliveryNoteDate || "-"}</p>
+        </div>
+        <div className="p-3">
+          <p><strong>Dispatched Through:</strong> {invoiceData.dispatchedThrough || "-"}</p>
+          <p><strong>Destination:</strong> {invoiceData.destination || "-"}</p>
+          <p><strong>Terms of Delivery:</strong> {invoiceData.termsOfDelivery || "-"}</p>
+        </div>
+      </div>
 
-                            <tr className="bg-gray-100 font-semibold">
-                                <td colSpan={4} className="border p-2 text-right">Total</td>
-                                <td className="border p-2 text-right">{totalAmount.toFixed(2)}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                )}
+      {/* Items Table */}
+      <table className="w-full border border-gray-400 mt-4 text-sm">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="border border-gray-400 p-2 w-10">Sl No.</th>
+            <th className="border border-gray-400 p-2 text-left">Particulars</th>
+            <th className="border border-gray-400 p-2 text-right">Amount (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {selectedProducts.map((item, i) => {
+            const p = products.find((x) => x._id === item.productId);
+            if (!p) return null;
+            const total = p.price * item.quantity;
+            return (
+              <tr key={i}>
+                <td className=" p-2 text-center">{i + 1}</td>
+                <td className=" p-2">{p.name} ({p.model})</td>
+                <td className=" p-2 text-right">{total.toFixed(2)}</td>
+              </tr>
+            );
+          })}
 
-                {/* Footer */}
-                <div className="mt-6 flex justify-between items-start text-sm">
-                    <div>
-                        <p className="font-semibold mb-1">Company’s Bank Details</p>
-                        <p><strong>Bank Name:</strong> ICICI Bank</p>
-                        <p><strong>A/c No:</strong> 1234567890</p>
-                        <p><strong>IFSC:</strong> ICIC0001234</p>
-                    </div>
-                    <div className="text-right">
-                        <p>for <strong>Mice Globals Rajasthan</strong></p>
-                        <p className="mt-10">Authorised Signatory</p>
-                    </div>
-                </div>
-            </div>
+          {selectedClient?.stateName?.toLowerCase() === "rajasthan" ? (
+            <>
+              <tr>
+                <td colSpan={2} className=" p-2 text-right font-semibold">CGST (Raj)</td>
+                <td className=" p-2 text-right">{cgst.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colSpan={2} className=" p-2 text-right font-semibold">SGST (Raj)</td>
+                <td className=" p-2 text-right">{sgst.toFixed(2)}</td>
+              </tr>
+            </>
+          ) : (
+            <tr>
+              <td colSpan={2} className=" p-2 text-right font-semibold">IGST (18%)</td>
+              <td className=" p-2 text-right">{sgst.toFixed(2)}</td>
+            </tr>
+          )}
 
+          <tr className="bg-gray-100 font-semibold">
+            <td colSpan={2} className="border border-gray-400 p-2 text-right">Total</td>
+            <td className="border border-gray-400 p-2 text-right">{totalAmount.toFixed(2)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Amount in words */}
+      <div className="border border-t-0 border-gray-400 p-3 text-sm">
+        <strong>Amount Chargeable (in words):</strong>
+         <p className="mt-1 italic text-gray-700">
+    {amountInWords || "—"}
+  </p>
+
+      </div>
+
+      {/* Bank Details and Sign */}
+      <div className="grid grid-cols-2 mt-4 text-sm">
+        <div>
+          <p className="font-semibold mb-1">Company’s Bank Details</p>
+          <p><strong>Account Holder’s Name:</strong> Mice Globals</p>
+          <p><strong>Bank Name:</strong> Union Bank of India (510605090001012)</p>
+          <p><strong>Branch & IFSC:</strong> Malviya Nagar Jaipur & UBIN0551066</p>
+        </div>
+        <div className="text-right">
+          <p>for <strong>Mice Globals Rajasthan</strong></p>
+          <p className="mt-12">Authorised Signatory</p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-gray-400 mt-3 pt-2 text-center text-xs text-gray-600">
+        <p>Company’s PAN: <strong>ABEFM9256H</strong></p>
+        <p>SUBJECT TO RAJASTHAN JURISDICTION</p>
+        <p>This is a Computer Generated Invoice</p>
+      </div>
+    </div>
 
 
             {/* Generate Button */}
