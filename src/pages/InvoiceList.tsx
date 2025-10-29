@@ -5,30 +5,36 @@ import { Input } from "@/components/ui/input";
 import {
   Plus,
   Search,
-  Package,
-  TrendingUp,
   Eye,
   Pencil,
   Trash2,
-  DollarSign,
-  Cpu,
+  FileText,
 } from "lucide-react";
 import axios from "axios";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { AddProductPage } from "./../pages/AddBlogPage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  model: string;
-  gst: number;
+interface Invoice {
+  _id: string;
+  invoiceNo: string;
+  date: string;
+  clientId?: {
+    name: string;
+    gstin: string;
+    address: string;
+  };
+  subTotal: number;
+  cgst: number;
+  sgst: number;
+  totalAmount: number;
 }
 
-export const ProductList = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+export const InvoiceList = () => {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [openDialog, setOpenDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
@@ -36,78 +42,62 @@ export const ProductList = () => {
   const navigate = useNavigate();
   const baseURL = import.meta.env.VITE_API_URL;
 
-  // Fetch products from backend
-  const fetchData = async (page = 1) => {
+  // ✅ Fetch invoices
+  const fetchInvoices = async (page = 1) => {
     try {
-      const response = await axios.get(`${baseURL}/api/products`);
-      const backendProducts = response.data.products || response.data;
-
-      const normalizedProducts = backendProducts.map((product: any) => ({
-        ...product,
-        id: product._id,
-      }));
-
-      setProducts(normalizedProducts);
+      const response = await axios.get(`${baseURL}/api/invoices/getAll`);
+      const allInvoices = response.data.invoices || response.data;
+      setInvoices(allInvoices);
       setCurrentPage(page);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching invoices:", error);
       toast({
         title: "❌ Error",
-        description: "Failed to load products.",
+        description: "Failed to load invoices.",
         variant: "destructive",
       });
     }
   };
 
   useEffect(() => {
-    fetchData(1);
+    fetchInvoices(1);
   }, []);
 
-  // Add new product
-  const addProduct = (newProduct: Product) => {
-    setProducts((prev) => [newProduct, ...prev]);
-    fetchData(currentPage);
-  };
-
-  // Delete product
+  // ✅ Delete invoice
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
-
+    if (!window.confirm("Are you sure you want to delete this invoice?")) return;
     try {
-      await axios.delete(`${baseURL}/api/products/${id}`);
+      await axios.delete(`${baseURL}/api/invoices/delete/${id}`);
       toast({
         title: "🗑️ Deleted",
-        description: "Product deleted successfully.",
+        description: "Invoice deleted successfully.",
       });
-      fetchData(currentPage);
+      fetchInvoices(currentPage);
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error("Error deleting invoice:", error);
       toast({
         title: "❌ Error",
-        description: "Failed to delete product.",
+        description: "Failed to delete invoice.",
         variant: "destructive",
       });
     }
   };
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // ✅ View details popup
+  const handleView = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setOpenDialog(true);
+  };
+
+  const filteredInvoices = invoices.filter(
+    (inv) =>
+      inv.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inv.clientId?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <Routes>
-      {/* ✅ Create Product Form */}
-      <Route
-        path="create"
-        element={
-          <AddProductPage
-            onSave={addProduct}
-            onCancel={() => navigate("/products")}
-          />
-        }
-      />
-
-      {/* ✅ Product Management Dashboard */}
+      {/* ✅ Invoice List Page */}
       <Route
         path="/"
         element={
@@ -116,36 +106,34 @@ export const ProductList = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Product Management
+                  Invoice Management
                 </h1>
                 <p className="text-gray-600 mt-2">
-                  Manage your products and track their inventory
+                  Manage your invoices and track billing details
                 </p>
               </div>
 
               <Button
-                onClick={() => navigate("create")}
+                onClick={() => navigate("/invoice/create")}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
                 size="lg"
               >
                 <Plus className="h-5 w-5 mr-2" />
-                Add New Product
+                Create New Invoice
               </Button>
             </div>
 
-            {/* Stats Section */}
-       
-            {/* ✅ Product Table */}
+            {/* ✅ Invoice Table */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <CardTitle className="text-xl font-semibold text-gray-800">
-                    Product List
+                    Invoice List
                   </CardTitle>
                   <div className="relative w-80">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                      placeholder="Search products by name..."
+                      placeholder="Search by invoice no or client name..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
@@ -160,48 +148,52 @@ export const ProductList = () => {
                     <thead className="bg-slate-100 text-slate-700 uppercase text-xs">
                       <tr>
                         <th className="px-4 py-3">#</th>
-                        <th className="px-4 py-3">Name</th>
-                        <th className="px-4 py-3">Price</th>
-                        <th className="px-4 py-3">Model</th>
-                        <th className="px-4 py-3">gst</th>
+                        <th className="px-4 py-3">Invoice No</th>
+                        <th className="px-4 py-3">Date</th>
+                        <th className="px-4 py-3">Client</th>
+                        <th className="px-4 py-3">Total (₹)</th>
                         <th className="px-4 py-3 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredProducts.length > 0 ? (
-                        filteredProducts.map((product, index) => (
+                      {filteredInvoices.length > 0 ? (
+                        filteredInvoices.map((invoice, index) => (
                           <tr
-                            key={product.id}
+                            key={invoice._id}
                             className="border-b hover:bg-slate-50 transition-colors"
                           >
                             <td className="px-4 py-3">{index + 1}</td>
                             <td className="px-4 py-3 font-medium text-gray-800">
-                              {product.name}
+                              {invoice.invoiceNo}
                             </td>
-                            <td className="px-4 py-3">₹{product.price}</td>
-                            <td className="px-4 py-3">{product.model}</td>
-                            <td className="px-4 py-3">{product.gst}</td>
+                            <td className="px-4 py-3">
+                              {invoice.date?.split("T")[0]}
+                            </td>
+                            <td className="px-4 py-3">
+                              {invoice.clientId?.name || "-"}
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-green-700">
+                              ₹{invoice.totalAmount.toFixed(2)}
+                            </td>
                             <td className="px-4 py-3 flex gap-2 justify-center">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() =>
-                                  alert(JSON.stringify(product, null, 2))
-                                }
+                                onClick={() => handleView(invoice)}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="default"
-                                onClick={() => alert(`Edit ${product.name}`)}
+                                onClick={() => navigate(`/invoice/${invoice._id}`)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={() => handleDelete(product.id)}
+                                onClick={() => handleDelete(invoice._id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -211,10 +203,10 @@ export const ProductList = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={6}
                             className="text-center py-6 text-slate-500 italic"
                           >
-                            No products found.
+                            No invoices found.
                           </td>
                         </tr>
                       )}
@@ -225,7 +217,7 @@ export const ProductList = () => {
                 {/* Pagination */}
                 <div className="flex justify-center items-center mt-4 space-x-4">
                   <Button
-                    onClick={() => fetchData(currentPage - 1)}
+                    onClick={() => fetchInvoices(currentPage - 1)}
                     disabled={currentPage === 1}
                     className="bg-blue-600 text-white hover:bg-blue-700"
                   >
@@ -235,7 +227,7 @@ export const ProductList = () => {
                     Page {currentPage} of {totalPages}
                   </span>
                   <Button
-                    onClick={() => fetchData(currentPage + 1)}
+                    onClick={() => fetchInvoices(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className="bg-blue-600 text-white hover:bg-blue-700"
                   >
@@ -244,6 +236,32 @@ export const ProductList = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* ✅ View Invoice Popup */}
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Invoice Details</DialogTitle>
+                </DialogHeader>
+                {selectedInvoice ? (
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p><strong>Invoice No:</strong> {selectedInvoice.invoiceNo}</p>
+                    <p><strong>Date:</strong> {selectedInvoice.date}</p>
+                    <p><strong>Client:</strong> {selectedInvoice.clientId?.name}</p>
+                    <p><strong>GSTIN:</strong> {selectedInvoice.clientId?.gstin}</p>
+                    <p><strong>Address:</strong> {selectedInvoice.clientId?.address}</p>
+                    <p><strong>Sub Total:</strong> ₹{selectedInvoice.subTotal.toFixed(2)}</p>
+                    <p><strong>CGST:</strong> ₹{selectedInvoice.cgst.toFixed(2)}</p>
+                    <p><strong>SGST:</strong> ₹{selectedInvoice.sgst.toFixed(2)}</p>
+                    <p className="font-semibold text-lg text-green-700">
+                      Total: ₹{selectedInvoice.totalAmount.toFixed(2)}
+                    </p>
+                  </div>
+                ) : (
+                  <p>No invoice selected</p>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         }
       />

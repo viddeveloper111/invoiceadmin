@@ -10,31 +10,21 @@ import NotFound from "./pages/NotFound";
 
 // Import your components from src/components
 import { Login } from "./components/Login";
-import { ClientManagement } from "./components/ClientManagement";
-import { JobProfileForm } from "./components/JobProfileForm";
-import { JobProfiles } from "./components/JobProfiles";
-import { Analytics } from "./components/Analytics";
 import { Dashboard } from "./components/Dashboard";
-import { ProjectLeads } from "./components/ProjectLeads";
-import { ProjectLeadForm } from "./components/ProjectLeadForm";
 import {AllFollowUps} from "./components/AllFollowUps";
 
-import BlogList from './components/BlogList';
 
-// Remove this line, as AddBlog.tsx is now AddSolarStationBlogForm.tsx
-// import AddBlog from './components/AddBlog'; // <--- REMOVE THIS LINE
-
-// Import the new container page for adding blogs
-import AddBlogPage from './pages/AddBlogPage'; // <--- ADD THIS LINE (assuming pages folder)
-// Or if you placed it in components: import AddBlogPage from './components/AddBlogPage';
-
-
-import EditBlog from './components/EditBlog';
-
-// Import your custom route wrappers
 import ProtectedRoute from "./Routes/ProtectedRoute";
 import PublicRoute from "./Routes/PublicRoute";
 import Profile from "./components/Profile";
+import Invoice from "./pages/Invoice";
+import {ProductList} from "./components/BlogList";
+import {AddProductPage} from "./pages/AddBlogPage";
+import EditBlog from "./components/EditBlog";
+import { ClientList } from "./components/ClientList";
+import { ClientManagement } from "./components/ClientManagement";
+import { ClientForm } from "./components/ClientForm";
+import {InvoiceList} from "./pages/invoiceList";
 
 const queryClient = new QueryClient();
 
@@ -65,29 +55,24 @@ const App = () => {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 {/* new All followup filter */}
                <Route path="allfollowup" element={<AllFollowUps />} />
+               <Route path="invoice" element={<Invoice />} />
+               <Route path="invoicelist" element={<InvoiceList />} />
+               <Route path="invoice/:id" element={<Invoice />} />
 
                 {/* Existing Protected Routes */}
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="clients/*" element={<ClientManagement />} />
-                <Route path="projects" element={<ProjectLeads />}>
-                  <Route path="create" element={<ProjectLeadForm onSave={() => { }} onCancel={() => { }} editData={null} />} />
-                  <Route path="edit/:id" element={<ProjectLeadForm onSave={() => { }} onCancel={() => { }} editData={null} />} />
-                </Route>
-                <Route path="jobs" element={<JobProfiles />}>
-                  <Route index element={<JobProfiles />} />
-                  <Route path="create" element={<JobProfileForm onSave={() => { }} onCancel={() => { }} editData={null} />} />
-                  <Route path="edit/:id" element={<JobProfileForm onSave={() => { }} onCancel={() => { }} editData={null} />} />
-                </Route>
-                <Route path="analytics" element={<Analytics />} />
-
-                {/* NEW: Blog Routes */}
-                <Route path="blog" element={<BlogList />} />
-                {/* Update this route to use the new AddBlogPage component */}
-                <Route path="blog/add" element={<AddBlogPage />} /> {/* <--- CHANGED THIS LINE */}
-                <Route path="blog/edit/:slug" element={<EditBlog />} />
-
-                {/* new profile page route */}
+             
                  <Route path="profile" element={<Profile />} />
+
+                     <Route path="blog" element={<ClientManagement />} />
+                {/* Update this route to use the new AddBlogPage component */}
+                <Route path="blog/create" element={<ClientForm />} /> {/* <--- CHANGED THIS LINE */}
+                <Route path="blog/edit/:slug" element={<EditBlog />} />
+                 
+                     <Route path="products" element={<ProductList />} />
+                {/* Update this route to use the new AddBlogPage component */}
+                <Route path="products/create" element={<AddProductPage />} /> {/* <--- CHANGED THIS LINE */}
+                <Route path="blog/edit/:slug" element={<EditBlog />} />
               </Route>
 
               

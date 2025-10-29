@@ -2,44 +2,18 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, TrendingUp } from "lucide-react";
+import { Plus, Search, Users, TrendingUp, Eye, Pencil, Trash2 } from "lucide-react";
 import { ClientForm } from "./ClientForm";
-import { ClientList } from "./ClientList";
 import axios from "axios";
 import { Routes, Route, useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 interface Client {
   id: string;
   name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  mobileNo: string;
-  company: string;
-  projectManager: string | null;
-  profileImage: string | null;
-  serialNo: string;
-  status: string;
-  country: string;
-  countryCode: string;
-  createdAt: string;
-  updatedAt: string;
-  otherDetails: any[];
-  source: string;
-  username: string;
-  lastFollowup: string;
-  nextFollowup: string;
-  paymentStatus: string;
-  totalAmount?: number;
-  paidAmount?: number;
-  conversations: number;
-  chatMessages: { id: number; message: string; timestamp: string }[];
-  followups: {
-    id: number;
-    description: string;
-    datetime: string;
-    completed: boolean;
-  }[];
+  gstin: string;
+  address: string;
+  stateName: string;
 }
 
 export const ClientManagement = () => {
@@ -50,39 +24,27 @@ export const ClientManagement = () => {
   const itemsPerPage = 10;
 
   const navigate = useNavigate();
-  const baseURL = import.meta.env.VITE_API_URL
+  const baseURL = import.meta.env.VITE_API_URL;
 
+  // Fetch clients from backend
   const fetchData = async (page = 1) => {
     try {
-      const skip = (page - 1) * itemsPerPage;
-
-      const response = await axios.get(`${baseURL}/clients`, {
-        params: {
-          filter: JSON.stringify({
-            limit: itemsPerPage,
-            skip,
-          }),
-        },
-      });
-
-      const backendClients = response.data.data || response.data;
-
+      const response = await axios.get(`${baseURL}/api/clients`);
+      const backendClients = response.data.clients || response.data;
       const normalizedClients = backendClients.map((client: any) => ({
         ...client,
         id: client._id,
-        contactPerson: client.contactPerson || "N/A",
-        chatMessages: client.chatMessages || [],
       }));
 
       setClients(normalizedClients);
-      console.log('This is the noremalized client fetched from backend ',normalizedClients)
-
-      if (response.data.pagination) {
-        setCurrentPage(response.data.pagination.currentPage);
-        setTotalPages(response.data.pagination.totalPages);
-      }
+      setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching clients:", error);
+      toast({
+        title: "❌ Error",
+        description: "Failed to load clients.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -90,27 +52,43 @@ export const ClientManagement = () => {
     fetchData(1);
   }, []);
 
+  // Add new client
   const addClient = (newClient: Client) => {
     setClients((prevClients) => [newClient, ...prevClients]);
     fetchData(currentPage);
   };
 
-  const filteredClients = clients.filter(
-    (client) =>
-      client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.projectManager?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Delete client
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this client?")) return;
+
+    try {
+      await axios.delete(`${baseURL}/api/clients/${id}`);
+      toast({
+        title: "🗑️ Deleted",
+        description: "Client deleted successfully.",
+      });
+      fetchData(currentPage);
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      toast({
+        title: "❌ Error",
+        description: "Failed to delete client.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredClients = clients.filter((client) =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const activeClients = clients.filter(
-    (client) => client.status === "Active"
-  ).length;
-  const pendingPayments = clients.filter(
-    (client) => client.paymentStatus === "Pending"
-  ).length;
+  const activeClients = clients.length;
+  const pendingPayments = 0;
 
   return (
     <Routes>
+      {/* ✅ Create Client Form */}
       <Route
         path="create"
         element={
@@ -121,10 +99,12 @@ export const ClientManagement = () => {
         }
       />
 
+      {/* ✅ Client Management Dashboard */}
       <Route
         path="/"
         element={
           <div className="space-y-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-6">
+            {/* Header */}
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -145,64 +125,10 @@ export const ClientManagement = () => {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Total Clients
-                      </p>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {clients.length}
-                      </p>
-                    </div>
-                    <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="h-6 w-6 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Stats Section */}
+         
 
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Active Clients
-                      </p>
-                      <p className="text-3xl font-bold text-green-600">
-                        {activeClients}
-                      </p>
-                    </div>
-                    <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">
-                        Pending Payments
-                      </p>
-                      <p className="text-3xl font-bold text-orange-600">
-                        {pendingPayments}
-                      </p>
-                    </div>
-                    <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-orange-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Directory */}
+            {/* ✅ Client Table */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between flex-wrap gap-4">
@@ -212,7 +138,7 @@ export const ClientManagement = () => {
                   <div className="relative w-80">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
-                      placeholder="Search clients by name or contact person..."
+                      placeholder="Search clients by name..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
@@ -222,13 +148,74 @@ export const ClientManagement = () => {
               </CardHeader>
 
               <CardContent className="pt-0">
-                <ClientList
-                  clients={filteredClients}
-                  onUpdate={setClients}
-                  refetchClients={() => fetchData(currentPage)}
-                />
+                <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                  <table className="min-w-full text-sm text-left">
+                    <thead className="bg-slate-100 text-slate-700 uppercase text-xs">
+                      <tr>
+                        <th className="px-4 py-3">#</th>
+                        <th className="px-4 py-3">Name</th>
+                        <th className="px-4 py-3">Address</th>
+                        <th className="px-4 py-3">GSTIN / UIN</th>
+                        <th className="px-4 py-3">State</th>
+                        <th className="px-4 py-3 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredClients.length > 0 ? (
+                        filteredClients.map((client, index) => (
+                          <tr
+                            key={client.id}
+                            className="border-b hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="px-4 py-3">{index + 1}</td>
+                            <td className="px-4 py-3 font-medium text-gray-800">
+                              {client.name}
+                            </td>
+                            <td className="px-4 py-3">{client.address}</td>
+                            <td className="px-4 py-3">{client.gstin || "—"}</td>
+                            <td className="px-4 py-3">{client.stateName}</td>
+                            <td className="px-4 py-3 flex gap-2 justify-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  alert(JSON.stringify(client, null, 2))
+                                }
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => alert(`Edit ${client.name}`)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(client.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="text-center py-6 text-slate-500 italic"
+                          >
+                            No clients found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-                {/* Pagination Controls */}
+                {/* Pagination */}
                 <div className="flex justify-center items-center mt-4 space-x-4">
                   <Button
                     onClick={() => fetchData(currentPage - 1)}

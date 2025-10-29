@@ -1,63 +1,224 @@
-import React, { useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link if you prefer
-import { XCircle, ArrowLeft } from 'lucide-react'; // Import ChevronLeft icon
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
+import axios from "axios";
+import { ArrowLeft, Tag, DollarSign, Cpu, Percent } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-// Import the specific forms for each website
-import AddSolarStationBlogForm from '@/components/AddSolarStationBlogForm';
-import AddVidhemaBlogForm from '@/components/AddVidhemaBlogForm';
-import AddConvexaiBlogForm from '@/components/AddConvexaiBlogForm'; 
+interface ProductFormProps {
+  onSave: (data: any) => void;
+  onCancel: () => void;
+}
 
-export default function AddBlogPage(): JSX.Element {
+export const AddProductPage = ({ onSave, onCancel }: ProductFormProps) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    model: "",
+    gst: "",
+  });
+
   const navigate = useNavigate();
-  const [selectedWebsite, setSelectedWebsite] = useState<'solarstation.in' | 'vidhema.com'>('solarstation.in');
+  const baseURL = import.meta.env.VITE_API_URL;
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // ✅ Basic validation
+    if (!formData.name.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Product name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) < 0) {
+      toast({
+        title: "⚠️ Invalid Price",
+        description: "Please enter a valid positive number for price.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.model.trim()) {
+      toast({
+        title: "⚠️ Missing Field",
+        description: "Product model is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      !formData.gst ||
+      isNaN(Number(formData.gst)) ||
+      Number(formData.gst) < 0 ||
+      Number(formData.gst) > 100
+    ) {
+      toast({
+        title: "⚠️ Invalid GST",
+        description: "Please enter a valid GST percentage between 0 and 100.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      name: formData.name.trim(),
+      price: Number(formData.price),
+      model: formData.model.trim(),
+      gst: Number(formData.gst),
+    };
+
+    try {
+      const res = await axios.post(`${baseURL}/api/products`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      toast({
+        title: "✅ Product Added",
+        description: "The product has been added successfully.",
+      });
+
+      navigate("/products");
+    } catch (error: any) {
+      console.error("Error adding product:", error);
+      toast({
+        title: "❌ Error",
+        description:
+          error?.response?.data?.message ||
+          "Failed to add product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-
-      {/* Back Button and Page Title Section */}
-      <div className="flex items-center justify-between mb-8">
-        {/* Back Button with desired styling */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/blog')} // Navigate back to the /blog route
-          className="hover:bg-white/60 backdrop-blur-sm border border-gray-200" // Exact CSS from your example
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" /> {/* ArrowLeft icon with margin */}
-          Back to Blogs {/* Button text */}
-        </Button>
-
-        {/* The "Publish to" selector remains on the right as it was */}
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-4">
-            <Label htmlFor="website-selector" className="text-lg font-medium text-gray-700">
-              Publish to:
-            </Label>
-            <Select
-              value={selectedWebsite}
-              onValueChange={(value: 'solarstation.in' | 'vidhema.com') => setSelectedWebsite(value)}
-            >
-              <SelectTrigger id="website-selector" className="w-[250px] sm:w-[200px] h-10 px-4 py-2 border rounded-md text-base focus:ring-blue-500 focus:border-blue-500">
-                <SelectValue placeholder="Select Website" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <SelectItem value="solarstation.in">solarstation.in</SelectItem>
-                <SelectItem value="vidhema.com">vidhema.com</SelectItem>
-                <SelectItem value="convexai.io">convexai.io</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Back Button + Title */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={onCancel}
+            className="hover:bg-white/60 border border-gray-200"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Products
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Add New Product
+            </h1>
+            <p className="text-gray-600 text-sm mt-1">
+              Fill in the product’s details below
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Conditionally render the appropriate form based on selection */}
-      {selectedWebsite === 'solarstation.in' ? (
-        <AddSolarStationBlogForm />
-      ) : selectedWebsite === 'vidhema.com' ? ( // Add this else if
-        <AddVidhemaBlogForm />
-      ) : ( // This will be for 'convexai.io'
-        <AddConvexaiBlogForm />
-      )}  
+        {/* Card */}
+        <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+            <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <Tag className="h-5 w-5" />
+              Product Information
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Product Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label className="font-medium flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-blue-600" />
+                    Product Name
+                  </Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    placeholder="Enter product name"
+                    className="h-12 rounded-lg"
+                  />
+                </div>
+
+                {/* Price */}
+                <div className="space-y-2">
+                  <Label className="font-medium flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                    Price
+                  </Label>
+                  <Input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => handleChange("price", e.target.value)}
+                    placeholder="Enter product price"
+                    className="h-12 rounded-lg"
+                  />
+                </div>
+
+                {/* GST */}
+                <div className="space-y-2">
+                  <Label className="font-medium flex items-center gap-2">
+                    <Percent className="h-4 w-4 text-amber-600" />
+                    GST (%)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={formData.gst}
+                    onChange={(e) => handleChange("gst", e.target.value)}
+                    placeholder="Enter GST percentage (e.g., 18)"
+                    className="h-12 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Model */}
+              <div className="space-y-2">
+                <Label className="font-medium flex items-center gap-2">
+                  <Cpu className="h-4 w-4 text-purple-600" />
+                  Product Model
+                </Label>
+                <Input
+                  value={formData.model}
+                  onChange={(e) => handleChange("model", e.target.value)}
+                  placeholder="Enter product model"
+                  className="h-12 rounded-lg"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-4 pt-4">
+                <Button
+                  type="submit"
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-md"
+                >
+                  💾 Save Product
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  className="flex-1 h-12 border-2 border-gray-300 rounded-lg font-semibold"
+                >
+                  ❌ Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
-}
+};

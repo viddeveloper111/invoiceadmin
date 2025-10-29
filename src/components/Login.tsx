@@ -31,10 +31,10 @@ export const Login = ({ onLogin }: LoginProps) => {
     setIsLoading(true);
     try {
       const loginData = {
-        username: username.trim(),
+        email: username.trim(),
         password: password.trim(),
       };
-      if (!loginData.username || !loginData.password) {
+      if (!loginData.email || !loginData.password) {
         // alert("Please enter both email and password");
         setIsLoading(false);
         return;
@@ -47,7 +47,7 @@ export const Login = ({ onLogin }: LoginProps) => {
     
 
       // Now putting the axios request
-      const result = await axios.post(`${baseURL}/users/login`, loginData, {
+      const result = await axios.post(`${baseURL}/api/auth/login`, loginData, {
         headers: { "Content-Type": "application/json" },
       });
       console.log("This is posted data of signin", result.data);

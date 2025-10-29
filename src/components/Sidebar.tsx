@@ -45,12 +45,10 @@ export const Sidebar = () => {
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { id: "clients", label: "Client Management", icon: Users, path: "/clients" },
-    { id: "jobs", label: "Job Profiles", icon: Briefcase, path: "/jobs" },
-    { id: "projectleads", label: "Project Leads", icon: UserCheck, path: "/projects" },
-    { id: "analytics", label: "Analytics", icon: BarChart, path: "/analytics" },
-    { id: "blog", label: "Blogs", icon: Newspaper, path: "/blog" },
-    { id: "allfollowup", label: "All Follow Ups", icon: Calendar, path: "/allfollowup" },
+    { id: "invoice", label: "Invoice Generator", icon: Users, path: "/invoice" },
+    { id: "invoicelist", label: "Invoice List", icon: Users, path: "/invoicelist" },
+    { id: "blog", label: "Clients", icon: Newspaper, path: "/blog" },
+    { id: "products", label: "Products", icon: Newspaper, path: "/products" },
   ];
 
   useEffect(()=>{
