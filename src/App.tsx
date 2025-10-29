@@ -24,7 +24,7 @@ import EditBlog from "./components/EditBlog";
 import { ClientList } from "./components/ClientList";
 import { ClientManagement } from "./components/ClientManagement";
 import { ClientForm } from "./components/ClientForm";
-import {InvoiceList} from "./pages/invoiceList";
+import {InvoiceList} from "./pages/InvoiceList";
 
 const queryClient = new QueryClient();
 
